@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 
 interface ChladniPatternProps {
@@ -56,9 +57,9 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
         const float PI = 3.14159265;
         vec2 p = (2.0 * gl_FragCoord.xy - u_resolution) / u_resolution.y;
 
-        // Expanded parameter ranges for more dramatic changes
-        vec4 s1 = vec4(0.5, 0.5, 0.5, 1.0);
-        vec4 s2 = vec4(-8.0, 8.0, 8.0, 9.0);
+        // Using the user-specified vector values
+        vec4 s1 = vec4(4.0, 4.0, 1.0, 4.0);
+        vec4 s2 = vec4(-3.0, 2.0, 4.0, 2.6);
 
         // Exaggerate scroll effect by amplifying u_xy.y (the scroll position)
         float scrollFactor = pow(u_xy.y * 2.0, 2.0); // Square the value for non-linear response
