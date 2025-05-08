@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 
 interface ChladniPatternProps {
@@ -88,14 +87,8 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
         float threshold = 0.05 + 0.05 * sin(scrollFactor * PI);
         float col = 1.0 - smoothstep(abs(amp), 0.0, threshold);
         
-        // Add subtle color variation based on scroll position
-        vec3 color = vec3(col);
-        if (scrollFactor > 0.5) {
-          // Shift color subtly as user scrolls past midpoint
-          color = vec3(col, col * (1.0 - (scrollFactor - 0.5) * 0.4), col * (1.0 - (scrollFactor - 0.5) * 0.7));
-        }
-        
-        gl_FragColor = vec4(color, 1.0);
+        // Keep the pattern monochromatic white
+        gl_FragColor = vec4(vec3(col), 1.0);
       }
     `;
     
