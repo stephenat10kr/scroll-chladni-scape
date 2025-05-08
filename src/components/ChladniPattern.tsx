@@ -51,56 +51,27 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       precision mediump float;
       uniform vec2 u_resolution;
       uniform float u_time;
-      uniform float u_scrollY; // Add scroll position as uniform
+      uniform vec2 u_xy;
       
       void main(void) {
-        // Constants
         const float PI = 3.14159265;
         vec2 p = (2.0 * gl_FragCoord.xy - u_resolution) / u_resolution.y;
 
-        // Change pattern parameters based on scroll
-        float scrollFactor = u_scrollY; // 0.0 to 1.0
-        
-        // Base parameters that change with scroll
-        float a = 1.0 + 3.0 * scrollFactor; 
-        float b = 1.0 + 3.0 * sin(scrollFactor * PI);
-        float n = 1.0 + 3.0 * scrollFactor;
-        float m = 2.0 + 2.6 * (1.0 - scrollFactor);
-        
-        // Add some time-based animation that varies with scroll
-        float timeScale = mix(0.5, 2.0, scrollFactor);
-        float timeOffset = u_time * timeScale;
-        
-        // Add oscillation that changes frequency with scroll
-        a += 0.2 * sin(timeOffset);
-        b += 0.2 * cos(timeOffset * 1.3);
-        
-        // Pattern rotation based on scroll
-        float angle = scrollFactor * PI;
-        vec2 rotated = vec2(
-          p.x * cos(angle) - p.y * sin(angle),
-          p.x * sin(angle) + p.y * cos(angle)
-        );
-        
-        // Use both original and rotated coordinates with scroll-based mixing
-        vec2 patternCoord = mix(p, rotated, scrollFactor * 0.8);
-        
-        // Calculate Chladni pattern
-        float amp = a * sin(PI * n * patternCoord.x) * sin(PI * m * patternCoord.y) +
-                   b * sin(PI * m * patternCoord.x) * sin(PI * n * patternCoord.y);
-        
-        // Color based on amplitude
-        float threshold = 0.05 + 0.1 * scrollFactor; // Adjust line thickness
-        float col = 1.0 - smoothstep(abs(amp), 0.0, threshold);
-        
-        // Add color variation based on scroll
-        vec3 color = mix(
-          vec3(1.0), // White at start
-          vec3(0.8, 0.9, 1.0), // Slight blue at end
-          scrollFactor
-        );
-        
-        gl_FragColor = vec4(color * col, 1.0);
+        vec4 s1 = vec4(1.0, 1.0, 1.0, 2.0);
+        vec4 s2 = vec4(-4.0, 4.0, 4.0, 4.6);
+
+        float tx = sin(u_time)*0.1; 
+        float ty = cos(u_time)*0.1; 
+
+        float a = mix(s1.x, s2.x, u_xy.x + tx);
+        float b = mix(s1.y, s2.y, u_xy.x + tx);
+        float n = mix(s1.z, s2.z, u_xy.y + ty);
+        float m = mix(s1.w, s2.w, u_xy.y + ty);
+
+        float amp = a * sin(PI * n * p.x) * sin(PI * m * p.y) +
+                    b * sin(PI * m * p.x) * sin(PI * n * p.y);
+        float col = 1.0 - smoothstep(abs(amp), 0.0, 0.1);
+        gl_FragColor = vec4(vec3(col), 1.0);
       }
     `;
     
@@ -159,7 +130,7 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
     const resolutionUniformLocation = gl.getUniformLocation(program, 'u_resolution');
     const timeUniformLocation = gl.getUniformLocation(program, 'u_time');
-    const scrollYUniformLocation = gl.getUniformLocation(program, 'u_scrollY');
+    const xyUniformLocation = gl.getUniformLocation(program, 'u_xy');
     
     // Animation
     let startTime = Date.now();
@@ -187,7 +158,7 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       // Set uniforms
       gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
       gl.uniform1f(timeUniformLocation, elapsedTime);
-      gl.uniform1f(scrollYUniformLocation, yNorm);
+      gl.uniform2f(xyUniformLocation, 0.5, yNorm);
       
       // Set up attributes
       gl.enableVertexAttribArray(positionAttributeLocation);
