@@ -57,21 +57,45 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
         const float PI = 3.14159265;
         vec2 p = (2.0 * gl_FragCoord.xy - u_resolution) / u_resolution.y;
 
-        vec4 s1 = vec4(1.0, 1.0, 1.0, 2.0);
-        vec4 s2 = vec4(-4.0, 4.0, 4.0, 4.6);
+        // Expanded parameter ranges for more dramatic changes
+        vec4 s1 = vec4(0.5, 0.5, 0.5, 1.0);
+        vec4 s2 = vec4(-8.0, 8.0, 8.0, 9.0);
 
-        float tx = sin(u_time)*0.1; 
-        float ty = cos(u_time)*0.1; 
+        // Exaggerate scroll effect by amplifying u_xy.y (the scroll position)
+        float scrollFactor = pow(u_xy.y * 2.0, 2.0); // Square the value for non-linear response
+        
+        // Create more dramatic time variation
+        float tx = sin(u_time * 0.2) * 0.15; 
+        float ty = cos(u_time * 0.3) * 0.15;
 
-        float a = mix(s1.x, s2.x, u_xy.x + tx);
-        float b = mix(s1.y, s2.y, u_xy.x + tx);
-        float n = mix(s1.z, s2.z, u_xy.y + ty);
-        float m = mix(s1.w, s2.w, u_xy.y + ty);
+        // Amplify parameter variation based on scroll
+        float a = mix(s1.x, s2.x, clamp(u_xy.x + tx + scrollFactor, 0.0, 1.0));
+        float b = mix(s1.y, s2.y, clamp(u_xy.x + tx + scrollFactor * 0.8, 0.0, 1.0));
+        float n = mix(s1.z, s2.z, clamp(u_xy.y + ty + scrollFactor * 1.2, 0.0, 1.0));
+        float m = mix(s1.w, s2.w, clamp(u_xy.y + ty + scrollFactor, 0.0, 1.0));
 
-        float amp = a * sin(PI * n * p.x) * sin(PI * m * p.y) +
-                    b * sin(PI * m * p.x) * sin(PI * n * p.y);
-        float col = 1.0 - smoothstep(abs(amp), 0.0, 0.1);
-        gl_FragColor = vec4(vec3(col), 1.0);
+        // Create a secondary pattern with different parameters that becomes more visible with scrolling
+        float amp1 = a * sin(PI * n * p.x) * sin(PI * m * p.y) +
+                     b * sin(PI * m * p.x) * sin(PI * n * p.y);
+        
+        float amp2 = b * sin(PI * (n+2.0) * p.y) * sin(PI * (m-1.0) * p.x) + 
+                     a * sin(PI * (m+2.0) * p.y) * sin(PI * (n-1.0) * p.x);
+        
+        // Blend between patterns based on scroll position
+        float amp = mix(amp1, amp2, scrollFactor);
+                
+        // Create more defined, high-contrast pattern edges
+        float threshold = 0.05 + 0.05 * sin(scrollFactor * PI);
+        float col = 1.0 - smoothstep(abs(amp), 0.0, threshold);
+        
+        // Add subtle color variation based on scroll position
+        vec3 color = vec3(col);
+        if (scrollFactor > 0.5) {
+          // Shift color subtly as user scrolls past midpoint
+          color = vec3(col, col * (1.0 - (scrollFactor - 0.5) * 0.4), col * (1.0 - (scrollFactor - 0.5) * 0.7));
+        }
+        
+        gl_FragColor = vec4(color, 1.0);
       }
     `;
     
@@ -136,11 +160,18 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     let startTime = Date.now();
     let frameId: number;
     
-    // Function to update scroll-based XY values
+    // Function to update scroll-based XY values with exaggerated effect
     const updateScrollXY = () => {
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+      
+      // Enhanced scroll normalization - creates more dramatic changes as you scroll
+      // Apply easing function for more dynamic effect
+      let yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+      
+      // Apply a non-linear curve to the scroll value for more dramatic changes
+      // This will make the middle part of the scroll change faster than the start/end
+      yNorm = Math.pow(yNorm, 1.5) * (1.0 - yNorm) + Math.pow(yNorm, 2.5);
       
       const currentTime = Date.now();
       const elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
