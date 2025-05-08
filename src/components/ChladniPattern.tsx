@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 
 interface ChladniPatternProps {
@@ -61,31 +60,31 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
         vec4 s1 = vec4(4.0, 4.0, 1.0, 4.0);
         vec4 s2 = vec4(-3.0, 2.0, 4.0, 2.6);
 
-        // Exaggerate scroll effect by amplifying u_xy.y (the scroll position)
-        float scrollFactor = pow(u_xy.y * 2.0, 2.0); // Square the value for non-linear response
+        // Reduce scroll effect by lowering the amplification factor
+        float scrollFactor = u_xy.y; // Linear response instead of squared
         
-        // Create more dramatic time variation
-        float tx = sin(u_time * 0.2) * 0.15; 
-        float ty = cos(u_time * 0.3) * 0.15;
+        // Create less dramatic time variation
+        float tx = sin(u_time * 0.2) * 0.1; 
+        float ty = cos(u_time * 0.3) * 0.1;
 
-        // Amplify parameter variation based on scroll
-        float a = mix(s1.x, s2.x, clamp(u_xy.x + tx + scrollFactor, 0.0, 1.0));
-        float b = mix(s1.y, s2.y, clamp(u_xy.x + tx + scrollFactor * 0.8, 0.0, 1.0));
-        float n = mix(s1.z, s2.z, clamp(u_xy.y + ty + scrollFactor * 1.2, 0.0, 1.0));
-        float m = mix(s1.w, s2.w, clamp(u_xy.y + ty + scrollFactor, 0.0, 1.0));
+        // Reduce parameter variation based on scroll
+        float a = mix(s1.x, s2.x, clamp(u_xy.x + tx + scrollFactor * 0.5, 0.0, 1.0));
+        float b = mix(s1.y, s2.y, clamp(u_xy.x + tx + scrollFactor * 0.4, 0.0, 1.0));
+        float n = mix(s1.z, s2.z, clamp(u_xy.y + ty + scrollFactor * 0.6, 0.0, 1.0));
+        float m = mix(s1.w, s2.w, clamp(u_xy.y + ty + scrollFactor * 0.5, 0.0, 1.0));
 
         // Create a secondary pattern with different parameters that becomes more visible with scrolling
         float amp1 = a * sin(PI * n * p.x) * sin(PI * m * p.y) +
                      b * sin(PI * m * p.x) * sin(PI * n * p.y);
         
-        float amp2 = b * sin(PI * (n+2.0) * p.y) * sin(PI * (m-1.0) * p.x) + 
-                     a * sin(PI * (m+2.0) * p.y) * sin(PI * (n-1.0) * p.x);
+        float amp2 = b * sin(PI * (n+1.0) * p.y) * sin(PI * (m-0.5) * p.x) + 
+                     a * sin(PI * (m+1.0) * p.y) * sin(PI * (n-0.5) * p.x);
         
-        // Blend between patterns based on scroll position
-        float amp = mix(amp1, amp2, scrollFactor);
+        // Blend between patterns based on scroll position with reduced effect
+        float amp = mix(amp1, amp2, scrollFactor * 0.5);
                 
-        // Create more defined, high-contrast pattern edges
-        float threshold = 0.05 + 0.05 * sin(scrollFactor * PI);
+        // Create defined pattern edges with milder threshold
+        float threshold = 0.05 + 0.03 * sin(scrollFactor * PI);
         float col = 1.0 - smoothstep(abs(amp), 0.0, threshold);
         
         // Keep the pattern monochromatic white
@@ -154,18 +153,13 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     let startTime = Date.now();
     let frameId: number;
     
-    // Function to update scroll-based XY values with exaggerated effect
+    // Function to update scroll-based XY values with reduced effect
     const updateScrollXY = () => {
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       
-      // Enhanced scroll normalization - creates more dramatic changes as you scroll
-      // Apply easing function for more dynamic effect
+      // Simple linear scroll normalization - less dramatic changes as you scroll
       let yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
-      
-      // Apply a non-linear curve to the scroll value for more dramatic changes
-      // This will make the middle part of the scroll change faster than the start/end
-      yNorm = Math.pow(yNorm, 1.5) * (1.0 - yNorm) + Math.pow(yNorm, 2.5);
       
       const currentTime = Date.now();
       const elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
