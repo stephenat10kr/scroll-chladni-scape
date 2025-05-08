@@ -13,7 +13,10 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     const container = containerRef.current;
     const canvas = canvasRef.current;
     
-    if (!container || !canvas) return;
+    if (!container || !canvas) {
+      console.error('Container or canvas not found');
+      return;
+    }
     
     // Initialize WebGL
     const gl = canvas.getContext('webgl');
@@ -22,12 +25,15 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       return;
     }
     
-    // Set canvas size
+    console.log('WebGL initialized successfully');
+    
+    // Set canvas size to match container
     const resizeCanvas = () => {
       const { width, height } = container.getBoundingClientRect();
       canvas.width = width;
       canvas.height = height;
       gl.viewport(0, 0, width, height);
+      console.log(`Canvas resized to ${width} x ${height}`);
     };
     
     resizeCanvas();
@@ -89,7 +95,10 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     
-    if (!vertexShader || !fragmentShader) return;
+    if (!vertexShader || !fragmentShader) {
+      console.error('Failed to create shaders');
+      return;
+    }
     
     // Create program
     const program = gl.createProgram();
@@ -126,15 +135,18 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     // Animation
     let startTime = Date.now();
     let frameId: number;
+    let scrollY = window.scrollY || document.documentElement.scrollTop;
+    let scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    let yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
     
     const render = () => {
+      // Update scroll position
+      scrollY = window.scrollY || document.documentElement.scrollTop;
+      scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+      
       const currentTime = Date.now();
       const elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
-      
-      // Get scroll position
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
       
       // Clear and set viewport
       gl.clearColor(0, 0, 0, 1);
@@ -159,33 +171,48 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       frameId = requestAnimationFrame(render);
     };
     
+    // Listen for scroll events
+    const handleScroll = () => {
+      scrollY = window.scrollY || document.documentElement.scrollTop;
+      scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+      console.log(`Scroll updated: ${scrollY}, normalized: ${yNorm}`);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    
+    // Start rendering
+    console.log('Starting render loop');
     render();
     
     return () => {
+      console.log('Cleaning up WebGL resources');
       window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('scroll', handleScroll);
       cancelAnimationFrame(frameId);
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
       gl.deleteShader(fragmentShader);
+      gl.deleteBuffer(positionBuffer);
     };
   }, []);
   
   return (
     <div 
       ref={containerRef}
-      className="relative w-full overflow-hidden"
-      style={{ position: 'relative', overflow: 'hidden' }}
+      className="relative w-full min-h-screen"
+      style={{ position: 'relative' }}
     >
       <canvas 
         ref={canvasRef}
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 w-full h-full"
         style={{ 
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
           width: '100%',
           height: '100%',
-          zIndex: -1,
+          zIndex: 0,
           pointerEvents: 'none'
         }}
       />
