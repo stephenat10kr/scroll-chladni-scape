@@ -135,15 +135,12 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     // Animation
     let startTime = Date.now();
     let frameId: number;
-    let scrollY = window.scrollY || document.documentElement.scrollTop;
-    let scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    let yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
     
-    const render = () => {
-      // Update scroll position
-      scrollY = window.scrollY || document.documentElement.scrollTop;
-      scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+    // Function to update scroll-based XY values
+    const updateScrollXY = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
       
       const currentTime = Date.now();
       const elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
@@ -168,27 +165,21 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       // Draw
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       
-      frameId = requestAnimationFrame(render);
+      // Log scroll position occasionally (not every frame to avoid console spam)
+      if (Math.random() < 0.01) {
+        console.log(`Scroll updated: ${scrollY}, normalized: ${yNorm}`);
+      }
+      
+      frameId = requestAnimationFrame(updateScrollXY);
     };
-    
-    // Listen for scroll events
-    const handleScroll = () => {
-      scrollY = window.scrollY || document.documentElement.scrollTop;
-      scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
-      console.log(`Scroll updated: ${scrollY}, normalized: ${yNorm}`);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
     
     // Start rendering
-    console.log('Starting render loop');
-    render();
+    console.log('Starting render loop with scroll-based morphing');
+    updateScrollXY();
     
     return () => {
       console.log('Cleaning up WebGL resources');
       window.removeEventListener('resize', resizeCanvas);
-      window.removeEventListener('scroll', handleScroll);
       cancelAnimationFrame(frameId);
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
