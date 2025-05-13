@@ -11,7 +11,7 @@ const Index = () => {
           {/* Section 1 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white opacity-0">Section 1</h1>
+              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 1</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Discover innovative scroll animations</li>
                 <li>• Experience seamless section transitions</li>
@@ -23,7 +23,7 @@ const Index = () => {
           {/* Section 2 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white opacity-0">Section 2</h1>
+              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 2</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Titles remain fixed while content scrolls</li>
                 <li>• Animated transitions between sections</li>
@@ -35,7 +35,7 @@ const Index = () => {
           {/* Section 3 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white opacity-0">Section 3</h1>
+              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 3</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Interactive navigation dots</li>
                 <li>• Responsive design for all devices</li>
@@ -45,12 +45,12 @@ const Index = () => {
           </section>
         </ScrollJackContainer>
         
-        {/* Red box content positioned completely off-screen initially */}
-        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center transform translate-y-full">
+        {/* Red box content that becomes visible after scroll-jacking */}
+        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
             <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
-              This red box replaces the second ScrollJackContainer component. You can add any content here that you'd like to display in this section.
+              This content appears after scrolling past all the scroll-jacked sections. Normal scrolling takes over here.
             </p>
           </div>
         </div>

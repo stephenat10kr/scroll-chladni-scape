@@ -10,13 +10,11 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
   const scrollAccumulator = useRef(0);
   const transitionTimeoutRef = useRef<number | null>(null);
-  const scrollTimeoutRef = useRef<number | null>(null);
   
   const childrenArray = React.Children.toArray(children);
   const sectionCount = childrenArray.length;
@@ -24,19 +22,39 @@ export const useScrollJack = (children: React.ReactNode) => {
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
   
+  // Track the last scroll position outside scroll sections
+  const lastScrollY = useRef(0);
+  
   // Handle cleanup of timeouts
   useEffect(() => {
     return () => {
       if (transitionTimeoutRef.current) {
         clearTimeout(transitionTimeoutRef.current);
       }
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
     };
   }, []);
   
   useEffect(() => {
+    // Track document scroll position to detect when to re-enter scroll-jack
+    const handleWindowScroll = () => {
+      if (hasReachedEnd) {
+        lastScrollY.current = window.scrollY;
+        
+        // If user has scrolled back to the section height area and is continuing upward
+        if (lastScrollY.current < window.innerHeight * 0.5 && window.scrollY === 0) {
+          // Re-enter the scroll-jack mode at the last section
+          setHasReachedEnd(false);
+          setActiveSection(sectionCount - 1);
+          setPreviousSection(null);
+          setAnimationDirection('down');
+          
+          // Reset body scroll position
+          document.body.style.overflow = 'hidden';
+          window.scrollTo(0, 0);
+        }
+      }
+    };
+
     const handleWheel = (e: WheelEvent) => {
       // Allow normal scrolling if we've reached the end
       if (hasReachedEnd) {
@@ -47,7 +65,7 @@ export const useScrollJack = (children: React.ReactNode) => {
       e.preventDefault();
       
       // Don't process scroll if already scrolling
-      if (isScrolling || isTransitioning) return;
+      if (isScrolling) return;
       
       // Accumulate scroll value to reduce sensitivity
       scrollAccumulator.current += Math.abs(e.deltaY);
@@ -59,33 +77,26 @@ export const useScrollJack = (children: React.ReactNode) => {
         // Determine scroll direction
         const direction = e.deltaY > 0 ? 1 : -1;
         
-        // Only allow downward scrolling and only if not at the end
         if (direction > 0) {
-          // Set animation direction based on scroll direction
+          // Scrolling down
           setAnimationDirection('up');
-          
-          // Store previous section before updating to new one
           setPreviousSection(activeSection);
           
-          // Calculate new active section
-          const newSection = Math.min(activeSection + 1, sectionCount - 1);
-          
-          // Check if we've reached the end of scroll sections
-          if (newSection === sectionCount - 1) {
-            setActiveSection(newSection);
-            
-            // Set a flag to release scroll control after last section is shown
-            scrollTimeoutRef.current = window.setTimeout(() => {
-              setHasReachedEnd(true);
-            }, 700); // Delay before releasing scroll control
+          if (activeSection < sectionCount - 1) {
+            // Move to next section
+            setActiveSection(activeSection + 1);
           } else {
-            setActiveSection(newSection);
+            // We're at the last section, allow normal scrolling
+            setHasReachedEnd(true);
+            document.body.style.overflow = 'auto';
           }
-        } else if (direction < 0 && activeSection > 0) {
-          // Allow scrolling up if not at the first section
-          setAnimationDirection('down');
-          setPreviousSection(activeSection);
-          setActiveSection(Math.max(0, activeSection - 1));
+        } else if (direction < 0) {
+          // Scrolling up
+          if (activeSection > 0) {
+            setAnimationDirection('down');
+            setPreviousSection(activeSection);
+            setActiveSection(activeSection - 1);
+          }
         }
         
         // Reset accumulator after action is triggered
@@ -104,12 +115,24 @@ export const useScrollJack = (children: React.ReactNode) => {
       container.addEventListener('wheel', handleWheel, { passive: false });
     }
     
+    // Add window scroll listener for detecting re-entry
+    window.addEventListener('scroll', handleWindowScroll);
+    
     return () => {
       if (container) {
         container.removeEventListener('wheel', handleWheel);
       }
+      window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isTransitioning]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+
+  // Set initial body style
+  useEffect(() => {
+    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [hasReachedEnd]);
 
   return {
     containerRef,

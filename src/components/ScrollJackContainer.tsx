@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useScrollJack } from './scroll-jack/use-scroll-jack';
 import { createModifiedSection } from './scroll-jack/utils';
 import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
@@ -27,9 +27,19 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
     setActiveSection(index);
     setHasReachedEnd(index === sectionCount - 1);
   };
+
+  // Reset scroll position when reaching end or beginning
+  useEffect(() => {
+    if (hasReachedEnd) {
+      window.scrollTo(0, 0);
+    }
+  }, [hasReachedEnd]);
   
   return (
-    <div ref={containerRef} className="h-screen overflow-hidden relative">
+    <div 
+      ref={containerRef} 
+      className={`h-screen overflow-hidden relative ${hasReachedEnd ? 'static' : ''}`}
+    >
       {/* Fixed title display component */}
       <ScrollJackTitle 
         titles={sectionTitles} 

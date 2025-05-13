@@ -33,14 +33,16 @@ export const createModifiedSection = (
   hasReachedEnd: boolean, 
   sectionCount: number
 ) => {
+  const isLastSection = index === sectionCount - 1;
+  
   return (
     <div
-      className="absolute inset-0 w-full h-full transition-transform duration-700 flex items-center justify-center"
+      className="absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out flex items-center justify-center"
       style={{
         transform: `translateY(${(index - activeSection) * 100}%)`,
         zIndex: index === activeSection ? 10 : 0,
-        opacity: hasReachedEnd && index === sectionCount - 1 ? 0 : 1,
-        pointerEvents: hasReachedEnd && index === sectionCount - 1 ? 'none' : 'auto'
+        opacity: hasReachedEnd && isLastSection ? 0 : 1,
+        pointerEvents: hasReachedEnd && isLastSection ? 'none' : 'auto'
       }}
     >
       {React.cloneElement(child, {
