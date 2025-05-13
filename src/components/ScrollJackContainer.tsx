@@ -133,8 +133,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   return (
     <div ref={containerRef} className="h-screen overflow-hidden relative">
-      {/* Fixed title area with animations - moved 200px down */}
-      <div className="absolute top-0 left-0 w-full z-30 pt-[200px] pb-0 overflow-hidden">
+      {/* Fixed title area in vertical center */}
+      <div className="absolute top-1/2 left-0 w-full z-30 transform -translate-y-1/2 overflow-hidden">
         <div className="text-center relative h-16">
           {/* Title animations */}
           {sectionTitles.map((title, index) => {
@@ -172,15 +172,15 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
           // Clone the section, but modify its content to hide the original title
           return (
             <div
-              className="absolute top-0 left-0 w-full h-full transition-transform duration-700"
+              className="absolute top-0 left-0 w-full h-full transition-transform duration-700 flex items-center justify-center"
               style={{
                 transform: `translateY(${(index - activeSection) * 100}%)`,
                 zIndex: index === activeSection ? 10 : 0,
               }}
             >
-              {React.cloneElement(child, {
+              {React.cloneElement(child as React.ReactElement<{ children?: React.ReactNode }>, {
                 ...child.props,
-                className: `${child.props.className || ''} pt-20`, // Reduced padding-top
+                className: `${child.props.className || ''} flex items-center justify-center`,
                 children: React.Children.map(child.props.children, (sectionChild) => {
                   if (!React.isValidElement(sectionChild)) {
                     return sectionChild;
