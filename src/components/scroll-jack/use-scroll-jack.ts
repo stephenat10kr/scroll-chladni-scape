@@ -20,33 +20,13 @@ export const useScrollJack = (children: React.ReactNode) => {
   // Track if we're transitioning to the next content
   const [isTransitioning, setIsTransitioning] = useState(false);
   
-  // Track section 3 display time
-  const section3Timer = useRef<NodeJS.Timeout | null>(null);
-  const [section3Displayed, setSection3Displayed] = useState(false);
-  const [section3Locked, setSection3Locked] = useState(false);
-  
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
-  
-  // Clean up the timer when component unmounts
-  useEffect(() => {
-    return () => {
-      if (section3Timer.current) {
-        clearTimeout(section3Timer.current);
-      }
-    };
-  }, []);
   
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       // If we're currently transitioning, don't handle wheel events
       if (isTransitioning) return;
-      
-      // If section 3 is locked, prevent scrolling down
-      if (section3Locked && e.deltaY > 0) {
-        e.preventDefault();
-        return;
-      }
       
       // If we've reached the end and scrolling down further, allow normal page scrolling
       if (hasReachedEnd && e.deltaY > 0) {
@@ -85,32 +65,8 @@ export const useScrollJack = (children: React.ReactNode) => {
           sectionCount - 1
         );
         
-        // Handle section 3 specifically
-        if (newSection === sectionCount - 1 && direction > 0) {
-          // We're scrolling to section 3 (last section)
-          if (!section3Displayed) {
-            setSection3Displayed(true);
-            setSection3Locked(true);
-            
-            console.log("Locking on section 3 for display time");
-            
-            // Set a timer to unlock section 3 after 2500ms
-            section3Timer.current = setTimeout(() => {
-              console.log("Section 3 display time complete, unlocking");
-              setSection3Locked(false);
-            }, 2500);
-          }
-        } else if (activeSection === sectionCount - 1 && direction < 0) {
-          // If scrolling up from section 3, clear any pending timers
-          if (section3Timer.current) {
-            clearTimeout(section3Timer.current);
-            section3Timer.current = null;
-          }
-          setSection3Locked(false);
-        }
-        
         // Check if we've reached the end or beginning
-        if (newSection === sectionCount - 1 && direction > 0 && !section3Locked) {
+        if (newSection === sectionCount - 1 && direction > 0) {
           setHasReachedEnd(true);
           setIsTransitioning(true);
           
@@ -133,7 +89,7 @@ export const useScrollJack = (children: React.ReactNode) => {
         // Add delay before allowing another scroll
         setTimeout(() => {
           setIsScrolling(false);
-        }, 800); // Increased from 700 to 800ms for smoother transitions
+        }, 700); // Adjust timing as needed
       }
     };
     
@@ -153,8 +109,6 @@ export const useScrollJack = (children: React.ReactNode) => {
             setHasReachedEnd(false);
             // Force active section to be the last one
             setActiveSection(sectionCount - 1);
-            setSection3Displayed(false);
-            setSection3Locked(false);
           }
         }
       }
@@ -174,7 +128,7 @@ export const useScrollJack = (children: React.ReactNode) => {
         container.removeEventListener('wheel', handleWheel);
       }
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isTransitioning, section3Displayed, section3Locked]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isTransitioning]);
 
   return {
     containerRef,
