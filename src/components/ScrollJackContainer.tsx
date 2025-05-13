@@ -43,6 +43,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
       observerRef.current = new IntersectionObserver(
         (entries) => {
           const [entry] = entries;
+          console.log("ScrollJack container in view:", entry.isIntersecting);
           setIsInView(entry.isIntersecting);
         },
         { threshold: 0.2 } // Trigger when at least 20% of the element is visible
