@@ -130,22 +130,21 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                 ...child.props,
                 className: `${child.props.className || ''} pt-20`, // Reduced padding-top
                 children: React.Children.map(child.props.children, (sectionChild) => {
-                  // Add explicit type check before accessing properties
-                  if (React.isValidElement(sectionChild)) {
-                    // Find and hide the original title in the content
-                    const childrenElements = React.Children.toArray(sectionChild.props.children);
-                    const filteredChildren = childrenElements.filter(element => {
-                      return !(React.isValidElement(element) && element.type === 'h1');
-                    });
-                    
-                    if (filteredChildren.length > 0 && React.isValidElement(sectionChild)) {
-                      // Use type checking before spreading props
-                      return React.cloneElement(sectionChild, {
-                        ...sectionChild.props,
-                        children: filteredChildren
-                      });
-                    }
+                  if (!React.isValidElement(sectionChild)) {
                     return sectionChild;
+                  }
+                  
+                  // Find and hide the original title in the content
+                  const childrenElements = React.Children.toArray(sectionChild.props.children);
+                  const filteredChildren = childrenElements.filter(element => {
+                    return !(React.isValidElement(element) && element.type === 'h1');
+                  });
+                  
+                  if (filteredChildren.length > 0) {
+                    return React.cloneElement(sectionChild, {
+                      ...sectionChild.props,
+                      children: filteredChildren
+                    });
                   }
                   return sectionChild;
                 })
