@@ -149,19 +149,21 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                   
                   // Find and hide the original title in the content
                   if (React.isValidElement(sectionChild) && sectionChild.props) {
-                    // Safely check if children exists in props
-                    const childProps = sectionChild.props as any; // Using 'any' type to fix the TS error
-                    if ('children' in childProps) {
+                    // Safely check if children exists in props using type assertion for proper TypeScript handling
+                    if ('children' in sectionChild.props) {
+                      // Use type assertion to help TypeScript understand the structure
+                      const childProps = sectionChild.props as any; // Changed from 'unknown' to 'any' to fix the error
                       const childrenElements = React.Children.toArray(childProps.children);
                       const filteredChildren = childrenElements.filter(element => {
                         return !(React.isValidElement(element) && element.type === 'h1');
                       });
                       
                       if (filteredChildren.length > 0) {
+                        // Use proper typing for React.cloneElement to avoid type errors
                         return React.cloneElement(
-                          sectionChild as React.ReactElement, 
+                          sectionChild as React.ReactElement<any>, 
                           { 
-                            ...childProps,  
+                            ...sectionChild.props as object,  
                             children: filteredChildren 
                           } 
                         );
