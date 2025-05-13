@@ -101,10 +101,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                     // Find and hide the original title in the content
                     const childrenElements = React.Children.toArray(sectionChild.props.children);
                     const filteredChildren = childrenElements.filter(element => {
-                      if (React.isValidElement(element) && element.type === 'h1') {
-                        return false; // Filter out the h1 element
-                      }
-                      return true; // Keep all other elements
+                      return !(React.isValidElement(element) && element.type === 'h1');
                     });
                     
                     return React.cloneElement(sectionChild, {
