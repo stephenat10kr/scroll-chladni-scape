@@ -139,7 +139,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                     // Safely check if children exists in props using type assertion for proper TypeScript handling
                     if ('children' in sectionChild.props) {
                       // Use type assertion to help TypeScript understand the structure
-                      const childProps = sectionChild.props as React.PropsWithChildren<any>;
+                      const childProps = sectionChild.props as any; // Changed from 'unknown' to 'any' to fix the error
                       const childrenElements = React.Children.toArray(childProps.children);
                       const filteredChildren = childrenElements.filter(element => {
                         return !(React.isValidElement(element) && element.type === 'h1');
