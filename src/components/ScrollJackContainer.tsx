@@ -199,6 +199,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                           sectionChild,
                           {
                             ...sectionChild.props,
+                            className: `${sectionChild.props.className || ''} flex flex-col items-center justify-center`,
                             children: filteredChildren
                           }
                         );
