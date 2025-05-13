@@ -137,7 +137,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                       return !(React.isValidElement(element) && element.type === 'h1');
                     });
                     
-                    if (React.isValidElement(sectionChild)) {
+                    if (filteredChildren.length > 0) {
                       return React.cloneElement(sectionChild, {
                         ...sectionChild.props,
                         children: filteredChildren
