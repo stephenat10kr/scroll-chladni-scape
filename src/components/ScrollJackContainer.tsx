@@ -9,6 +9,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [previousSection, setPreviousSection] = useState<number | null>(null);
+  const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const childrenArray = React.Children.toArray(children);
   const sectionCount = childrenArray.length;
   
@@ -45,6 +47,12 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
       // Determine scroll direction
       const direction = e.deltaY > 0 ? 1 : -1;
       
+      // Set animation direction based on scroll direction
+      setAnimationDirection(direction > 0 ? 'up' : 'down');
+      
+      // Store previous section before updating to new one
+      setPreviousSection(activeSection);
+      
       // Calculate new active section
       const newSection = Math.min(
         Math.max(0, activeSection + direction),
@@ -73,12 +81,37 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   return (
     <div ref={containerRef} className="h-screen overflow-hidden relative">
-      {/* Fixed title that changes with active section */}
-      <div className="absolute top-0 left-0 w-full z-30 pt-20 pb-8">
-        <div className="text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 text-white transition-opacity duration-500">
-            {sectionTitles[activeSection]}
-          </h1>
+      {/* Fixed title area with animations */}
+      <div className="absolute top-0 left-0 w-full z-30 pt-20 pb-8 overflow-hidden">
+        <div className="text-center relative h-24">
+          {/* Title animations */}
+          {sectionTitles.map((title, index) => {
+            const isActive = index === activeSection;
+            const wasActive = index === previousSection;
+            
+            let titleClass = "text-5xl md:text-7xl font-bold mb-8 text-white absolute w-full left-0 transition-all duration-700 opacity-0";
+            
+            if (isActive) {
+              titleClass += " opacity-100 translate-y-0";
+            } else if (wasActive && animationDirection === 'up') {
+              titleClass += " -translate-y-20";
+            } else if (wasActive && animationDirection === 'down') {
+              titleClass += " translate-y-20";
+            } else if (index > activeSection) {
+              titleClass += " translate-y-20";
+            } else if (index < activeSection) {
+              titleClass += " -translate-y-20";
+            }
+            
+            return (
+              <h1 
+                key={`title-${index}`} 
+                className={titleClass}
+              >
+                {title}
+              </h1>
+            );
+          })}
         </div>
       </div>
       
@@ -104,10 +137,12 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                       return !(React.isValidElement(element) && element.type === 'h1');
                     });
                     
-                    return React.cloneElement(sectionChild, {
-                      ...sectionChild.props,
-                      children: filteredChildren
-                    });
+                    if (React.isValidElement(sectionChild)) {
+                      return React.cloneElement(sectionChild as React.ReactElement, {
+                        ...sectionChild.props,
+                        children: filteredChildren
+                      });
+                    }
                   }
                   return sectionChild;
                 })
@@ -122,7 +157,11 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
         {Array.from({ length: sectionCount }).map((_, index) => (
           <button
             key={index}
-            onClick={() => setActiveSection(index)}
+            onClick={() => {
+              setPreviousSection(activeSection);
+              setAnimationDirection(index > activeSection ? 'up' : 'down');
+              setActiveSection(index);
+            }}
             className={`w-3 h-3 rounded-full ${
               index === activeSection ? 'bg-white' : 'bg-gray-500'
             }`}
