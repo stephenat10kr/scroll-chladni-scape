@@ -6,14 +6,13 @@ import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
 import NavigationDots from './scroll-jack/NavigationDots';
 import { ScrollJackContainerProps } from './scroll-jack/types';
 
-const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) => {
+const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, titles }) => {
   const {
     containerRef,
     activeSection,
     previousSection,
     animationDirection,
     sectionCount,
-    sectionTitles,
     hasReachedEnd,
     setActiveSection,
     setPreviousSection,
@@ -34,6 +33,9 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
       window.scrollTo(0, 0);
     }
   }, [hasReachedEnd]);
+  
+  // Use provided titles or default to section numbers
+  const sectionTitles = titles || Array.from({ length: sectionCount }, (_, i) => `Section ${i + 1}`);
   
   return (
     <div 

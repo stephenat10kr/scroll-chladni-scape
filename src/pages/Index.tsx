@@ -7,7 +7,9 @@ const Index = () => {
     <ChladniPattern>
       <div className="flex flex-col">
         {/* First ScrollJackContainer */}
-        <ScrollJackContainer>
+        <ScrollJackContainer
+          titles={["Section 1", "Section 2", "Section 3"]}
+        >
           {/* Section 1 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full mt-24">
