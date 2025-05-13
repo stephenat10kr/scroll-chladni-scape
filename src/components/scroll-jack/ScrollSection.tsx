@@ -14,6 +14,7 @@ const ScrollSection: React.FC<ScrollSectionProps> = ({
   activeSection,
   allSectionsViewed
 }) => {
+  // Ensure child is a valid React element before proceeding
   if (!React.isValidElement(child)) {
     return null;
   }
@@ -26,7 +27,7 @@ const ScrollSection: React.FC<ScrollSectionProps> = ({
         zIndex: index === activeSection ? 10 : 0,
       }}
     >
-      {React.cloneElement(child, {
+      {React.cloneElement(child as React.ReactElement<any>, {
         ...child.props,
         className: `${child.props.className || ''} pt-20`, // Reduced padding-top
         children: React.Children.map(child.props.children, (sectionChild) => {
@@ -46,7 +47,7 @@ const ScrollSection: React.FC<ScrollSectionProps> = ({
               
               if (filteredChildren.length > 0) {
                 return React.cloneElement(
-                  sectionChild, 
+                  sectionChild as React.ReactElement<any>, 
                   { 
                     ...childProps,
                     children: filteredChildren 
