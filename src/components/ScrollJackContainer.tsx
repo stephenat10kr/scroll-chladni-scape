@@ -81,8 +81,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   return (
     <div ref={containerRef} className="h-screen overflow-hidden relative">
-      {/* Fixed title area with animations - reduced bottom padding */}
-      <div className="absolute top-0 left-0 w-full z-30 pt-8 pb-0 overflow-hidden">
+      {/* Fixed title area with animations - moved 200px down */}
+      <div className="absolute top-0 left-0 w-full z-30 pt-[200px] pb-0 overflow-hidden">
         <div className="text-center relative h-16">
           {/* Title animations */}
           {sectionTitles.map((title, index) => {
