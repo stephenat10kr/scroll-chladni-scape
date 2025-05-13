@@ -26,6 +26,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
     setAnimationDirection(index > activeSection ? 'up' : 'down');
     setActiveSection(index);
     setHasReachedEnd(index === sectionCount - 1);
+    console.log(`Dot navigation to section: ${index}`);
   };
   
   return (

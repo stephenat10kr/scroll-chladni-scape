@@ -12,7 +12,7 @@ export const useScrollJack = (children: React.ReactNode) => {
   const sectionCount = childrenArray.length;
   
   // Add scroll sensitivity threshold
-  const scrollThreshold = 50; // Higher value = less sensitive
+  const scrollThreshold = 30; // Lower value = more sensitive (reduced from 50)
   const scrollAccumulator = useRef(0);
   
   // Track if we've reached the end of the scroll sections
@@ -65,31 +65,33 @@ export const useScrollJack = (children: React.ReactNode) => {
           sectionCount - 1
         );
         
-        // Check if we've reached the end or beginning
-        if (newSection === sectionCount - 1 && direction > 0) {
-          setHasReachedEnd(true);
-          setIsTransitioning(true);
-          
-          // Set a timeout to allow the transition to complete before allowing more scroll
-          setTimeout(() => {
-            setIsTransitioning(false);
-          }, 800);
-        } else if (activeSection === 0 && direction < 0) {
-          // We're at the top and trying to scroll up
-          // Normal scrolling will be allowed
+        // Ensure we can reach section 3 (and all sections) reliably
+        if (newSection === sectionCount - 1) {
+          // We've reached the last section
+          if (direction > 0) {
+            setHasReachedEnd(true);
+            setIsTransitioning(true);
+            
+            // Set a timeout to allow the transition to complete before allowing more scroll
+            setTimeout(() => {
+              setIsTransitioning(false);
+            }, 800);
+          }
         } else {
+          // We're not at the last section, ensure hasReachedEnd is false
           setHasReachedEnd(false);
         }
         
         setActiveSection(newSection);
+        console.log(`Navigating to section: ${newSection}`);
         
         // Reset accumulator after action is triggered
         scrollAccumulator.current = 0;
         
-        // Add delay before allowing another scroll
+        // Add delay before allowing another scroll (reduced from 700ms)
         setTimeout(() => {
           setIsScrolling(false);
-        }, 700); // Adjust timing as needed
+        }, 600);
       }
     };
     
