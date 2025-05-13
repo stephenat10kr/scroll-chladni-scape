@@ -45,44 +45,15 @@ const Index = () => {
           </section>
         </ScrollJackContainer>
         
-        {/* Second ScrollJackContainer */}
-        <ScrollJackContainer>
-          {/* Section 4 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
-            <div className="text-center">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 4</h1>
-              <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
-                <li>• Additional features displayed here</li>
-                <li>• Second scrolljack container starts</li>
-                <li>• Independent scroll navigation</li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Section 5 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
-            <div className="text-center">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 5</h1>
-              <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
-                <li>• Continue the journey with more content</li>
-                <li>• Each container has its own navigation</li>
-                <li>• Seamless transition between containers</li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Section 6 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
-            <div className="text-center">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 6</h1>
-              <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
-                <li>• Complete the experience</li>
-                <li>• Final section of the showcase</li>
-                <li>• Continue scrolling for more content</li>
-              </ul>
-            </div>
-          </section>
-        </ScrollJackContainer>
+        {/* Red box replacing the second ScrollJackContainer */}
+        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
+            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
+              This red box replaces the second ScrollJackContainer component. You can add any content here that you'd like to display in this section.
+            </p>
+          </div>
+        </div>
       </div>
     </ChladniPattern>
   );

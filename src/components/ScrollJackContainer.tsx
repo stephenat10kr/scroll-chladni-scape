@@ -178,7 +178,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                 zIndex: index === activeSection ? 10 : 0,
               }}
             >
-              {React.cloneElement(child as React.ReactElement<{ children?: React.ReactNode }>, {
+              {React.cloneElement(child as React.ReactElement<any>, {
                 ...child.props,
                 className: `${child.props.className || ''} flex items-center justify-center`,
                 children: React.Children.map(child.props.children, (sectionChild) => {
@@ -187,9 +187,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                   }
                   
                   // Type-safe approach for manipulating React elements with children
-                  if (React.isValidElement<{ children?: React.ReactNode }>(sectionChild)) {
-                    if (sectionChild.props && 'children' in sectionChild.props) {
-                      const childrenElements = React.Children.toArray(sectionChild.props.children);
+                  if (React.isValidElement(sectionChild)) {
+                    const sectionChildProps = sectionChild.props as any;
+                    if (sectionChildProps && 'children' in sectionChildProps) {
+                      const childrenElements = React.Children.toArray(sectionChildProps.children);
                       const filteredChildren = childrenElements.filter(element => {
                         return !(React.isValidElement(element) && element.type === 'h1');
                       });
@@ -198,8 +199,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                         return React.cloneElement(
                           sectionChild,
                           {
-                            ...sectionChild.props,
-                            className: `${sectionChild.props.className || ''} flex flex-col items-center justify-center`,
+                            ...sectionChildProps,
+                            className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center`,
                             children: filteredChildren
                           }
                         );
