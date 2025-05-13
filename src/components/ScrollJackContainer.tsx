@@ -14,6 +14,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   const childrenArray = React.Children.toArray(children);
   const sectionCount = childrenArray.length;
   
+  // Add scroll sensitivity threshold
+  const scrollThreshold = 50; // Higher value = less sensitive
+  const scrollAccumulator = useRef(0);
+  
   // Extract titles from each section for the fixed title
   const sectionTitles = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
@@ -42,29 +46,38 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
       
       if (isScrolling) return;
       
-      setIsScrolling(true);
+      // Accumulate scroll value to reduce sensitivity
+      scrollAccumulator.current += Math.abs(e.deltaY);
       
-      // Determine scroll direction
-      const direction = e.deltaY > 0 ? 1 : -1;
-      
-      // Set animation direction based on scroll direction
-      setAnimationDirection(direction > 0 ? 'up' : 'down');
-      
-      // Store previous section before updating to new one
-      setPreviousSection(activeSection);
-      
-      // Calculate new active section
-      const newSection = Math.min(
-        Math.max(0, activeSection + direction),
-        sectionCount - 1
-      );
-      
-      setActiveSection(newSection);
-      
-      // Add delay before allowing another scroll
-      setTimeout(() => {
-        setIsScrolling(false);
-      }, 700); // Adjust timing as needed
+      // Only trigger scroll action if the accumulated value exceeds the threshold
+      if (scrollAccumulator.current > scrollThreshold) {
+        setIsScrolling(true);
+        
+        // Determine scroll direction
+        const direction = e.deltaY > 0 ? 1 : -1;
+        
+        // Set animation direction based on scroll direction
+        setAnimationDirection(direction > 0 ? 'up' : 'down');
+        
+        // Store previous section before updating to new one
+        setPreviousSection(activeSection);
+        
+        // Calculate new active section
+        const newSection = Math.min(
+          Math.max(0, activeSection + direction),
+          sectionCount - 1
+        );
+        
+        setActiveSection(newSection);
+        
+        // Reset accumulator after action is triggered
+        scrollAccumulator.current = 0;
+        
+        // Add delay before allowing another scroll
+        setTimeout(() => {
+          setIsScrolling(false);
+        }, 700); // Adjust timing as needed
+      }
     };
     
     const container = containerRef.current;
