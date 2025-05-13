@@ -11,6 +11,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   const [isScrolling, setIsScrolling] = useState(false);
   const [previousSection, setPreviousSection] = useState<number | null>(null);
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
+  const [allSectionsViewed, setAllSectionsViewed] = useState(false);
   const childrenArray = React.Children.toArray(children);
   const sectionCount = childrenArray.length;
   
@@ -42,6 +43,11 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
+      // If all sections have been viewed, don't interfere with normal scrolling
+      if (allSectionsViewed) {
+        return;
+      }
+      
       e.preventDefault();
       
       if (isScrolling) return;
@@ -68,6 +74,14 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
           sectionCount - 1
         );
         
+        // If we're at the last section and trying to move down,
+        // set flag that all sections have been viewed
+        if (activeSection === sectionCount - 1 && direction > 0) {
+          setAllSectionsViewed(true);
+          setIsScrolling(false);
+          return;
+        }
+        
         setActiveSection(newSection);
         
         // Reset accumulator after action is triggered
@@ -90,12 +104,15 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
         container.removeEventListener('wheel', handleWheel);
       }
     };
-  }, [activeSection, isScrolling, sectionCount]);
+  }, [activeSection, isScrolling, sectionCount, allSectionsViewed]);
   
   return (
-    <div ref={containerRef} className="h-screen overflow-hidden relative">
+    <div 
+      ref={containerRef} 
+      className={`h-screen ${allSectionsViewed ? "" : "overflow-hidden"} relative`}
+    >
       {/* Fixed title area with animations - moved 200px down */}
-      <div className="absolute top-0 left-0 w-full z-30 pt-[200px] pb-0 overflow-hidden">
+      <div className={`absolute top-0 left-0 w-full z-30 pt-[200px] pb-0 overflow-hidden ${allSectionsViewed ? "hidden" : ""}`}>
         <div className="text-center relative h-16">
           {/* Title animations */}
           {sectionTitles.map((title, index) => {
@@ -133,37 +150,35 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
           // Clone the section, but modify its content to hide the original title
           return (
             <div
-              className="absolute top-0 left-0 w-full h-full transition-transform duration-700"
+              className={`absolute top-0 left-0 w-full h-full transition-transform duration-700 ${allSectionsViewed ? "static h-screen" : ""}`}
               style={{
-                transform: `translateY(${(index - activeSection) * 100}%)`,
+                transform: allSectionsViewed ? 'none' : `translateY(${(index - activeSection) * 100}%)`,
                 zIndex: index === activeSection ? 10 : 0,
               }}
             >
-              {React.cloneElement(child, {
-                ...child.props,
-                className: `${child.props.className || ''} pt-20`, // Reduced padding-top
-                children: React.Children.map(child.props.children, (sectionChild) => {
+              {React.cloneElement(child as React.ReactElement<any>, {
+                ...(child as React.ReactElement).props,
+                className: `${(child as React.ReactElement).props.className || ''} pt-20`, // Reduced padding-top
+                children: React.Children.map((child as React.ReactElement).props.children, (sectionChild) => {
                   if (!React.isValidElement(sectionChild)) {
                     return sectionChild;
                   }
                   
                   // Find and hide the original title in the content
                   if (React.isValidElement(sectionChild) && sectionChild.props) {
-                    // Safely check if children exists in props using type assertion for proper TypeScript handling
+                    // Safely check if children exists in props
                     if ('children' in sectionChild.props) {
-                      // Use type assertion to help TypeScript understand the structure
-                      const childProps = sectionChild.props as any; // Changed from 'unknown' to 'any' to fix the error
+                      const childProps = sectionChild.props as Record<string, any>;
                       const childrenElements = React.Children.toArray(childProps.children);
                       const filteredChildren = childrenElements.filter(element => {
                         return !(React.isValidElement(element) && element.type === 'h1');
                       });
                       
                       if (filteredChildren.length > 0) {
-                        // Use proper typing for React.cloneElement to avoid type errors
                         return React.cloneElement(
-                          sectionChild as React.ReactElement<any>, 
+                          sectionChild as React.ReactElement, 
                           { 
-                            ...sectionChild.props as object,  
+                            ...sectionChild.props,
                             children: filteredChildren 
                           } 
                         );
@@ -179,7 +194,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
         return child;
       })}
       
-      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 flex flex-col gap-2">
+      <div className={`fixed right-8 top-1/2 transform -translate-y-1/2 z-50 flex flex-col gap-2 ${allSectionsViewed ? "hidden" : ""}`}>
         {Array.from({ length: sectionCount }).map((_, index) => (
           <button
             key={index}
