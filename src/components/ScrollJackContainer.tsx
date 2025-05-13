@@ -135,19 +135,25 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                   }
                   
                   // Find and hide the original title in the content
-                  // Fix for TS2339: Add type guard to ensure we can access 'children'
-                  if (sectionChild.props && 'children' in sectionChild.props) {
-                    const childrenElements = React.Children.toArray(sectionChild.props.children);
-                    const filteredChildren = childrenElements.filter(element => {
-                      return !(React.isValidElement(element) && element.type === 'h1');
-                    });
-                    
-                    // Fix for TS2698: Add type guard to ensure we can spread props
-                    if (filteredChildren.length > 0) {
-                      return React.cloneElement(sectionChild, {
-                        ...sectionChild.props as object,
-                        children: filteredChildren
+                  if (React.isValidElement(sectionChild) && sectionChild.props) {
+                    // Safely check if children exists in props
+                    const childrenProp = sectionChild.props.children;
+                    if (childrenProp) {
+                      const childrenElements = React.Children.toArray(childrenProp);
+                      const filteredChildren = childrenElements.filter(element => {
+                        return !(React.isValidElement(element) && element.type === 'h1');
                       });
+                      
+                      if (filteredChildren.length > 0) {
+                        // Use proper typing for React.cloneElement
+                        return React.cloneElement(
+                          sectionChild, 
+                          {
+                            ...sectionChild.props,
+                            children: filteredChildren
+                          }
+                        );
+                      }
                     }
                   }
                   return sectionChild;
