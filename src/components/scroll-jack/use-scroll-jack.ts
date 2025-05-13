@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { extractSectionTitles } from './utils';
 
 export const useScrollJack = (children: React.ReactNode) => {
