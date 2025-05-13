@@ -1,6 +1,5 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollArea } from './ui/scroll-area';
 
 interface ScrollJackContainerProps {
   children: React.ReactNode;
@@ -12,6 +11,28 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   const [isScrolling, setIsScrolling] = useState(false);
   const childrenArray = React.Children.toArray(children);
   const sectionCount = childrenArray.length;
+  
+  // Extract titles from each section for the fixed title
+  const sectionTitles = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      // Find the h1 element within each section's first div
+      const childrenElements = React.Children.toArray(child.props.children);
+      
+      for (const element of childrenElements) {
+        if (React.isValidElement(element) && element.props && element.props.children) {
+          // Look for the heading inside the div
+          const headingElements = React.Children.toArray(element.props.children);
+          for (const headingElement of headingElements) {
+            if (React.isValidElement(headingElement) && 
+                headingElement.type === 'h1') {
+              return headingElement.props.children;
+            }
+          }
+        }
+      }
+    }
+    return "Section";
+  });
   
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -52,17 +73,53 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   return (
     <div ref={containerRef} className="h-screen overflow-hidden relative">
-      {React.Children.map(children, (child, index) => (
-        <div
-          className="absolute top-0 left-0 w-full h-full transition-transform duration-700"
-          style={{
-            transform: `translateY(${(index - activeSection) * 100}%)`,
-            zIndex: index === activeSection ? 10 : 0,
-          }}
-        >
-          {child}
+      {/* Fixed title that changes with active section */}
+      <div className="absolute top-0 left-0 w-full z-30 pt-20 pb-8">
+        <div className="text-center">
+          <h1 className="text-5xl md:text-7xl font-bold mb-8 text-white transition-opacity duration-500">
+            {sectionTitles[activeSection]}
+          </h1>
         </div>
-      ))}
+      </div>
+      
+      {React.Children.map(children, (child, index) => {
+        if (React.isValidElement(child)) {
+          // Clone the section, but modify its content to hide the original title
+          return (
+            <div
+              className="absolute top-0 left-0 w-full h-full transition-transform duration-700"
+              style={{
+                transform: `translateY(${(index - activeSection) * 100}%)`,
+                zIndex: index === activeSection ? 10 : 0,
+              }}
+            >
+              {React.cloneElement(child, {
+                ...child.props,
+                className: `${child.props.className || ''} pt-40`, // Add padding top to make space for fixed title
+                children: React.Children.map(child.props.children, (sectionChild) => {
+                  if (React.isValidElement(sectionChild)) {
+                    // Find and hide the original title in the content
+                    const childrenElements = React.Children.toArray(sectionChild.props.children);
+                    const filteredChildren = childrenElements.filter(element => {
+                      if (React.isValidElement(element) && element.type === 'h1') {
+                        return false; // Filter out the h1 element
+                      }
+                      return true; // Keep all other elements
+                    });
+                    
+                    return React.cloneElement(sectionChild, {
+                      ...sectionChild.props,
+                      children: filteredChildren
+                    });
+                  }
+                  return sectionChild;
+                })
+              })}
+            </div>
+          );
+        }
+        return child;
+      })}
       
       <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 flex flex-col gap-2">
         {Array.from({ length: sectionCount }).map((_, index) => (
