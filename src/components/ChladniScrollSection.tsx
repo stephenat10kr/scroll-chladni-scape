@@ -1,7 +1,7 @@
 
 import React from "react";
 import ChladniPattern from "@/components/ChladniPattern";
-import ScrollJackContainer from "@/components/ScrollJackContainer";
+import ScrollJackContainer from "@/components/scroll-jack/ScrollJackContainer";
 
 interface ChladniScrollSectionProps {
   sections: {
