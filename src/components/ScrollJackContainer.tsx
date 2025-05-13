@@ -14,12 +14,14 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   const sectionCount = childrenArray.length;
   
   // Extract section titles
-  const sectionTitles = React.Children.map(children, (child: any) => {
+  const sectionTitles = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
       // Find the h1 element within each section
-      const h1Element = React.Children.toArray(child.props.children).find((element: any) => 
+      const h1Element = React.Children.toArray(child.props.children).find((element) => 
         React.isValidElement(element) && 
+        element.props && 
         element.props.className && 
+        typeof element.props.className === 'string' &&
         element.props.className.includes('text-5xl')
       );
       
@@ -82,11 +84,17 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
       {React.Children.map(children, (child, index) => {
         if (React.isValidElement(child)) {
           // Clone the child but filter out the h1 title
-          const contentWithoutTitle = React.Children.toArray(child.props.children).filter((element: any) => 
-            !(React.isValidElement(element) && 
-              element.props.className && 
-              element.props.className.includes('text-5xl'))
-          );
+          const contentWithoutTitle = React.Children.toArray(child.props.children).filter((element) => {
+            if (React.isValidElement(element)) {
+              return !(
+                element.props && 
+                element.props.className && 
+                typeof element.props.className === 'string' &&
+                element.props.className.includes('text-5xl')
+              );
+            }
+            return true;
+          });
           
           const newContent = (
             <div className="text-center pt-32">
@@ -102,7 +110,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                 zIndex: index === activeSection ? 10 : 0,
               }}
             >
-              {React.cloneElement(child as React.ReactElement, {}, newContent)}
+              {React.cloneElement(child, {}, newContent)}
             </div>
           );
         }
