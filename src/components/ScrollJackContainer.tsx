@@ -38,9 +38,9 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
         animationDirection={animationDirection}
       />
       
-      {/* Render modified sections with improved centering */}
+      {/* Render modified sections with improved vertical and horizontal centering */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-full h-full">
+        <div className="w-full h-full flex items-center justify-center">
           {React.Children.map(children, (child, index) => {
             if (React.isValidElement(child)) {
               return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);

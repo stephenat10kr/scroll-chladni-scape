@@ -25,7 +25,7 @@ export const extractSectionTitles = (children: React.ReactNode) => {
   });
 };
 
-// Create modified section component with hidden original title
+// Create modified section component with hidden original title and improved centering
 export const createModifiedSection = (
   child: React.ReactElement, 
   index: number, 

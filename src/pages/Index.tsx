@@ -9,7 +9,7 @@ const Index = () => {
         {/* First ScrollJackContainer */}
         <ScrollJackContainer>
           {/* Section 1 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
+          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center items-center">
             <div className="text-center w-full">
               <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 1</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
@@ -21,7 +21,7 @@ const Index = () => {
           </section>
 
           {/* Section 2 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
+          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center items-center">
             <div className="text-center w-full">
               <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 2</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
@@ -33,7 +33,7 @@ const Index = () => {
           </section>
 
           {/* Section 3 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
+          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center items-center">
             <div className="text-center w-full">
               <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 3</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
