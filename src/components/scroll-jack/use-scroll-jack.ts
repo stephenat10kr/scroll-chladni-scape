@@ -12,13 +12,15 @@ export const useScrollJack = (children: React.ReactNode) => {
   const sectionCount = childrenArray.length;
   
   // Add scroll sensitivity threshold
-  const scrollThreshold = 30; // Lower value = more sensitive (reduced from 50)
+  const scrollThreshold = 20; // Lower value = more sensitive (reduced further from 30)
   const scrollAccumulator = useRef(0);
   
   // Track if we've reached the end of the scroll sections
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   // Track if we're transitioning to the next content
   const [isTransitioning, setIsTransitioning] = useState(false);
+  // Add a ref to track last direction for more reliable section 3 transitions
+  const lastDirectionRef = useRef<number>(0);
   
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
@@ -43,6 +45,9 @@ export const useScrollJack = (children: React.ReactNode) => {
       
       if (isScrolling) return;
       
+      // Store last direction to help with section 3 reliability
+      lastDirectionRef.current = e.deltaY > 0 ? 1 : -1;
+      
       // Accumulate scroll value to reduce sensitivity
       scrollAccumulator.current += Math.abs(e.deltaY);
       
@@ -65,33 +70,51 @@ export const useScrollJack = (children: React.ReactNode) => {
           sectionCount - 1
         );
         
-        // Ensure we can reach section 3 (and all sections) reliably
-        if (newSection === sectionCount - 1) {
-          // We've reached the last section
-          if (direction > 0) {
+        // Special handling for section 3 (index 2)
+        if (activeSection === 1 && direction > 0) {
+          // Going from section 2 to section 3
+          console.log("Trying to go to section 3");
+          
+          // Force the activeSection to be 2 (section 3)
+          setActiveSection(2);
+          
+          // If this is the last section, handle end of section logic
+          if (2 === sectionCount - 1) {
             setHasReachedEnd(true);
             setIsTransitioning(true);
             
-            // Set a timeout to allow the transition to complete before allowing more scroll
             setTimeout(() => {
               setIsTransitioning(false);
             }, 800);
           }
         } else {
-          // We're not at the last section, ensure hasReachedEnd is false
-          setHasReachedEnd(false);
+          // Normal section navigation
+          if (newSection === sectionCount - 1) {
+            // We've reached the last section
+            if (direction > 0) {
+              setHasReachedEnd(true);
+              setIsTransitioning(true);
+              
+              setTimeout(() => {
+                setIsTransitioning(false);
+              }, 800);
+            }
+          } else {
+            // We're not at the last section, ensure hasReachedEnd is false
+            setHasReachedEnd(false);
+          }
+          
+          setActiveSection(newSection);
+          console.log(`Navigating to section: ${newSection}`);
         }
-        
-        setActiveSection(newSection);
-        console.log(`Navigating to section: ${newSection}`);
         
         // Reset accumulator after action is triggered
         scrollAccumulator.current = 0;
         
-        // Add delay before allowing another scroll (reduced from 700ms)
+        // Shorter delay before allowing another scroll
         setTimeout(() => {
           setIsScrolling(false);
-        }, 600);
+        }, 500);
       }
     };
     
