@@ -7,6 +7,7 @@ interface ChladniPatternProps {
 const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollYRef = useRef<number>(0);
   
   useEffect(() => {
     const container = containerRef.current;
@@ -153,13 +154,30 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     let startTime = Date.now();
     let frameId: number;
     
-    // Function to update scroll-based XY values with reduced effect
+    // Track wheel scrolling separately from window.scrollY
+    const handleWheel = (e: WheelEvent) => {
+      // Accumulate wheel delta regardless of scrolljacking
+      scrollYRef.current += e.deltaY * 0.001;
+      
+      // Keep the value between 0 and 1 for shader use
+      scrollYRef.current = Math.max(0, Math.min(1, scrollYRef.current));
+    };
+    
+    // Add wheel event listener (passive so it doesn't interfere with scrolljacking)
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    
+    // Function to update scroll-based XY values with both window.scrollY and wheel events
     const updateScrollXY = () => {
+      // Get normal scroll position (will be constrained by scrolljacking)
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       
-      // Simple linear scroll normalization - less dramatic changes as you scroll
-      let yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+      // Simple linear scroll normalization
+      let windowYNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+      
+      // Combine window scroll position with wheel scroll
+      // This ensures pattern moves even when scrolljacking prevents normal scrolling
+      let combinedYNorm = Math.max(0, Math.min(1, windowYNorm + scrollYRef.current));
       
       const currentTime = Date.now();
       const elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
@@ -174,7 +192,7 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       // Set uniforms
       gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
       gl.uniform1f(timeUniformLocation, elapsedTime);
-      gl.uniform2f(xyUniformLocation, 0.5, yNorm);
+      gl.uniform2f(xyUniformLocation, 0.5, combinedYNorm);
       
       // Set up attributes
       gl.enableVertexAttribArray(positionAttributeLocation);
@@ -186,7 +204,7 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       
       // Log scroll position occasionally (not every frame to avoid console spam)
       if (Math.random() < 0.01) {
-        console.log(`Scroll updated: ${scrollY}, normalized: ${yNorm}`);
+        console.log(`Scroll updated: ${scrollY}, combined norm: ${combinedYNorm}`);
       }
       
       frameId = requestAnimationFrame(updateScrollXY);
@@ -199,6 +217,7 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     return () => {
       console.log('Cleaning up WebGL resources');
       window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('wheel', handleWheel);
       cancelAnimationFrame(frameId);
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
