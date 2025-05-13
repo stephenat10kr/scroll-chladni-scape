@@ -17,47 +17,20 @@ export const useScrollJack = (children: React.ReactNode) => {
   
   // Track if we've reached the end of the scroll sections
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
-  // Track if we've seen section 3 (for triggering normal scrolling)
-  const hasViewedSection3Ref = useRef(false);
-  // Add a delay after showing section 3 before allowing normal scrolling
-  const section3TimerRef = useRef<number | null>(null);
+  // Track if we're transitioning to the next content
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
   
   useEffect(() => {
-    // When we reach the last section, mark it as viewed after a delay
-    if (activeSection === sectionCount - 1 && !hasViewedSection3Ref.current) {
-      // Clear any existing timer
-      if (section3TimerRef.current) {
-        window.clearTimeout(section3TimerRef.current);
-      }
-      
-      // Set a timer to allow some time for the user to view section 3
-      section3TimerRef.current = window.setTimeout(() => {
-        hasViewedSection3Ref.current = true;
-        console.log("Section 3 viewed, normal scrolling enabled");
-      }, 800); // Give time for animation and viewing
-    }
-    
-    return () => {
-      // Clean up timer on unmount or section change
-      if (section3TimerRef.current) {
-        window.clearTimeout(section3TimerRef.current);
-        section3TimerRef.current = null;
-      }
-    };
-  }, [activeSection, sectionCount]);
-  
-  useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      // If we're already scrolling, don't process another scroll
-      if (isScrolling) return;
+      // If we're currently transitioning, don't handle wheel events
+      if (isTransitioning) return;
       
-      // If we've viewed section 3 and we're scrolling down, enable normal scrolling
-      if (hasViewedSection3Ref.current && activeSection === sectionCount - 1 && e.deltaY > 0) {
-        setHasReachedEnd(true);
-        return; // Allow normal scrolling behavior
+      // If we've reached the end and scrolling down further, allow normal page scrolling
+      if (hasReachedEnd && e.deltaY > 0) {
+        return; // Let the event propagate naturally for normal scrolling
       }
       
       // If we're at the first section and scrolling up, allow normal page scrolling up
@@ -67,6 +40,8 @@ export const useScrollJack = (children: React.ReactNode) => {
       
       // In all other cases, handle scroll-jacking
       e.preventDefault();
+      
+      if (isScrolling) return;
       
       // Accumulate scroll value to reduce sensitivity
       scrollAccumulator.current += Math.abs(e.deltaY);
@@ -90,6 +65,22 @@ export const useScrollJack = (children: React.ReactNode) => {
           sectionCount - 1
         );
         
+        // Check if we've reached the end or beginning
+        if (newSection === sectionCount - 1 && direction > 0) {
+          setHasReachedEnd(true);
+          setIsTransitioning(true);
+          
+          // Set a timeout to allow the transition to complete before allowing more scroll
+          setTimeout(() => {
+            setIsTransitioning(false);
+          }, 800);
+        } else if (activeSection === 0 && direction < 0) {
+          // We're at the top and trying to scroll up
+          // Normal scrolling will be allowed
+        } else {
+          setHasReachedEnd(false);
+        }
+        
         setActiveSection(newSection);
         
         // Reset accumulator after action is triggered
@@ -103,7 +94,10 @@ export const useScrollJack = (children: React.ReactNode) => {
     };
     
     const handleScroll = () => {
-      // If the user has scrolled back up the page and the container is in view again,
+      // If we're transitioning, don't handle scroll events
+      if (isTransitioning) return;
+      
+      // If user has scrolled back up the page and the container is in view again,
       // re-enable scrolljacking
       if (hasReachedEnd && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
@@ -113,7 +107,6 @@ export const useScrollJack = (children: React.ReactNode) => {
           // Add some position check to make sure we're really scrolling up into the container
           if (rect.bottom < window.innerHeight * 1.5) {
             setHasReachedEnd(false);
-            hasViewedSection3Ref.current = false; // Reset the section 3 viewed state
             // Force active section to be the last one
             setActiveSection(sectionCount - 1);
           }
@@ -135,7 +128,7 @@ export const useScrollJack = (children: React.ReactNode) => {
         container.removeEventListener('wheel', handleWheel);
       }
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isTransitioning]);
 
   return {
     containerRef,
