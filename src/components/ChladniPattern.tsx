@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 
 interface ChladniPatternProps {
@@ -8,7 +7,6 @@ interface ChladniPatternProps {
 const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scrollYRef = useRef<number>(0);
   
   useEffect(() => {
     const container = containerRef.current;
@@ -154,29 +152,14 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     // Animation
     let startTime = Date.now();
     let frameId: number;
-
-    // Track wheel events for smooth background scrolling even with scrolljacking
-    const handleWheel = (e: WheelEvent) => {
-      // Update our internal scroll position regardless of scrolljacking
-      scrollYRef.current = Math.max(0, Math.min(1, scrollYRef.current + (e.deltaY / 1000)));
-      // Note: We don't preventDefault here, so normal scrolljacking can still work
-    };
-
-    // Add wheel event listener at passive true to not interfere with scrolljacking
-    window.addEventListener('wheel', handleWheel, { passive: true });
     
-    // Function to update scroll-based XY values with both actual scroll and wheel inputs
+    // Function to update scroll-based XY values with reduced effect
     const updateScrollXY = () => {
-      // Get the actual window scroll position
-      const windowScrollY = window.scrollY || document.documentElement.scrollTop;
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       
-      // Normalize the window scroll position (0-1)
-      let windowNormScroll = scrollHeight > 0 ? windowScrollY / scrollHeight : 0;
-
-      // Use both the wheel events and actual scroll position
-      // This ensures the background responds even during scrolljacking
-      let yNorm = Math.max(windowNormScroll, scrollYRef.current);
+      // Simple linear scroll normalization - less dramatic changes as you scroll
+      let yNorm = scrollHeight > 0 ? scrollY / scrollHeight : 0;
       
       const currentTime = Date.now();
       const elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
@@ -203,7 +186,7 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
       
       // Log scroll position occasionally (not every frame to avoid console spam)
       if (Math.random() < 0.01) {
-        console.log(`Scroll updated: ${windowScrollY}, normalized: ${yNorm}`);
+        console.log(`Scroll updated: ${scrollY}, normalized: ${yNorm}`);
       }
       
       frameId = requestAnimationFrame(updateScrollXY);
@@ -216,7 +199,6 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
     return () => {
       console.log('Cleaning up WebGL resources');
       window.removeEventListener('resize', resizeCanvas);
-      window.removeEventListener('wheel', handleWheel);
       cancelAnimationFrame(frameId);
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
