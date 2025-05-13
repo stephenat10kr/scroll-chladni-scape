@@ -40,7 +40,7 @@ export const createModifiedSection = (
         transform: `translateY(${(index - activeSection) * 100}%)`,
         zIndex: index === activeSection ? 10 : 0,
         opacity: hasReachedEnd && index === sectionCount - 1 ? 0 : 1,
-        pointerEvents: hasReachedEnd && index === sectionCount - 1 ? 'none' : 'auto',
+        pointerEvents: hasReachedEnd && index === sectionCount - 1 ? 'none' : 'auto'
       }}
     >
       {React.cloneElement(child, {
