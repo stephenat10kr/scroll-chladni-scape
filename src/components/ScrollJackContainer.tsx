@@ -51,7 +51,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
       />
       
       {/* Render sections with proper vertical centering */}
-      <div className="absolute inset-0">
+      <div className={`absolute inset-0 ${hasReachedEnd ? 'pb-screen' : ''}`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
             return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);

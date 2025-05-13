@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 // Extract titles from sections
@@ -41,8 +40,9 @@ export const createModifiedSection = (
       style={{
         transform: `translateY(${(index - activeSection) * 100}%)`,
         zIndex: index === activeSection ? 10 : 0,
-        opacity: hasReachedEnd && isLastSection ? 0 : 1,
-        pointerEvents: hasReachedEnd && isLastSection ? 'none' : 'auto'
+        // Keep the last section visible when reaching end
+        opacity: 1,
+        pointerEvents: hasReachedEnd && !isLastSection ? 'none' : 'auto'
       }}
     >
       {React.cloneElement(child, {
