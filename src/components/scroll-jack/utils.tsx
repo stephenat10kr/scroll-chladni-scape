@@ -54,7 +54,7 @@ export const createModifiedSection = (
           if (React.isValidElement(sectionChild)) {
             const sectionChildProps = sectionChild.props as any;
             if (sectionChildProps && 'children' in sectionChildProps) {
-              // Keep the structure but ensure h1 stays hidden with opacity-0
+              // Keep the structure but ensure content is properly centered
               return React.cloneElement(
                 sectionChild,
                 {
