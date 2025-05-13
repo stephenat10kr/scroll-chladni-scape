@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useScrollJack } from './scroll-jack/use-scroll-jack';
 import { createModifiedSection } from './scroll-jack/utils';
 import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
@@ -7,8 +7,10 @@ import NavigationDots from './scroll-jack/NavigationDots';
 import { ScrollJackContainerProps } from './scroll-jack/types';
 
 const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, titles }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  
   const {
-    containerRef,
     activeSection,
     previousSection,
     animationDirection,
@@ -17,7 +19,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
-    setHasReachedEnd
+    setHasReachedEnd,
+    setIsInView
   } = useScrollJack(children);
 
   const handleSectionChange = (index: number) => {
@@ -33,6 +36,27 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
       window.scrollTo(0, 0);
     }
   }, [hasReachedEnd]);
+  
+  // Set up intersection observer to detect when container is in view
+  useEffect(() => {
+    if (containerRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          const [entry] = entries;
+          setIsInView(entry.isIntersecting);
+        },
+        { threshold: 0.2 } // Trigger when at least 20% of the element is visible
+      );
+      
+      observerRef.current.observe(containerRef.current);
+    }
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [setIsInView]);
   
   // Use provided titles or default to section numbers
   const sectionTitles = titles || Array.from({ length: sectionCount }, (_, i) => `Section ${i + 1}`);

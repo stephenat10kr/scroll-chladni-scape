@@ -10,6 +10,7 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [isInView, setIsInView] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -56,12 +57,12 @@ export const useScrollJack = (children: React.ReactNode) => {
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // Allow normal scrolling if we've reached the end
-      if (hasReachedEnd) {
+      // Only activate scrolljacking when component is in view and not already at the end
+      if (!isInView || hasReachedEnd) {
         return; // Let the event propagate naturally
       }
       
-      // Prevent default in all other cases while in scrolljack mode
+      // Prevent default to enable scrolljacking behavior
       e.preventDefault();
       
       // Don't process scroll if already scrolling
@@ -111,7 +112,7 @@ export const useScrollJack = (children: React.ReactNode) => {
     
     // Add the wheel event listener to the container
     const container = containerRef.current;
-    if (container) {
+    if (container && isInView) {
       container.addEventListener('wheel', handleWheel, { passive: false });
     }
     
@@ -124,15 +125,20 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isInView]);
 
-  // Set initial body style
+  // Set initial body style - only lock scrolling when component is in view and not at the end
   useEffect(() => {
-    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+    if (isInView && !hasReachedEnd) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [hasReachedEnd]);
+  }, [isInView, hasReachedEnd]);
 
   return {
     containerRef,
@@ -142,9 +148,11 @@ export const useScrollJack = (children: React.ReactNode) => {
     sectionCount,
     sectionTitles,
     hasReachedEnd,
+    isInView,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
     setHasReachedEnd,
+    setIsInView,
   };
 };
