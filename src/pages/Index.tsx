@@ -10,7 +10,7 @@ const Index = () => {
         <ScrollJackContainer>
           {/* Section 1 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
-            <div className="text-center">
+            <div className="text-center w-full">
               <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 1</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Discover innovative scroll animations</li>
@@ -22,7 +22,7 @@ const Index = () => {
 
           {/* Section 2 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
-            <div className="text-center">
+            <div className="text-center w-full">
               <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 2</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Titles remain fixed while content scrolls</li>
@@ -34,7 +34,7 @@ const Index = () => {
 
           {/* Section 3 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center">
-            <div className="text-center">
+            <div className="text-center w-full">
               <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 3</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Interactive navigation dots</li>

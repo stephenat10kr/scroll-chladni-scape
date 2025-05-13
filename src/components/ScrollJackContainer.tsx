@@ -180,7 +180,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
             >
               {React.cloneElement(child as React.ReactElement<any>, {
                 ...child.props,
-                className: `${child.props.className || ''} flex items-center justify-center`,
+                className: `${child.props.className || ''} flex items-center justify-center h-full`,
                 children: React.Children.map(child.props.children, (sectionChild) => {
                   if (!React.isValidElement(sectionChild)) {
                     return sectionChild;
@@ -200,7 +200,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                           sectionChild,
                           {
                             ...sectionChildProps,
-                            className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center`,
+                            className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center h-full`,
                             children: filteredChildren
                           }
                         );
