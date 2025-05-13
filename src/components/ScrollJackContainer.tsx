@@ -156,10 +156,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                 zIndex: index === activeSection ? 10 : 0,
               }}
             >
-              {React.cloneElement(child as React.ReactElement<any>, {
-                ...(child as React.ReactElement).props,
-                className: `${(child as React.ReactElement).props.className || ''} pt-20`, // Reduced padding-top
-                children: React.Children.map((child as React.ReactElement).props.children, (sectionChild) => {
+              {React.cloneElement(child, {
+                ...child.props,
+                className: `${child.props.className || ''} pt-20`, // Reduced padding-top
+                children: React.Children.map(child.props.children, (sectionChild) => {
                   if (!React.isValidElement(sectionChild)) {
                     return sectionChild;
                   }
@@ -176,7 +176,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                       
                       if (filteredChildren.length > 0) {
                         return React.cloneElement(
-                          sectionChild as React.ReactElement, 
+                          sectionChild, 
                           { 
                             ...sectionChild.props,
                             children: filteredChildren 
