@@ -17,34 +17,39 @@ export const useScrollJack = (children: React.ReactNode) => {
   
   // Track if we've reached the end of the scroll sections
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  
   // Track if we've seen section 3 (for triggering normal scrolling)
-  const hasViewedSection3Ref = useRef(false);
-  // Add a delay after showing section 3 before allowing normal scrolling
-  const section3TimerRef = useRef<number | null>(null);
+  const hasViewedLastSectionRef = useRef(false);
+  
+  // Track if we've had an extra scroll after viewing the last section
+  const hasExtraScrollRef = useRef(false);
+  
+  // Add a delay after showing last section before allowing normal scrolling
+  const lastSectionTimerRef = useRef<number | null>(null);
   
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
   
   useEffect(() => {
-    // When we reach the last section, mark it as viewed after a delay
-    if (activeSection === sectionCount - 1 && !hasViewedSection3Ref.current) {
+    // When we reach the last section, mark it as viewed
+    if (activeSection === sectionCount - 1 && !hasViewedLastSectionRef.current) {
       // Clear any existing timer
-      if (section3TimerRef.current) {
-        window.clearTimeout(section3TimerRef.current);
+      if (lastSectionTimerRef.current) {
+        window.clearTimeout(lastSectionTimerRef.current);
       }
       
-      // Set a timer to allow some time for the user to view section 3
-      section3TimerRef.current = window.setTimeout(() => {
-        hasViewedSection3Ref.current = true;
-        console.log("Section 3 viewed, normal scrolling enabled");
+      // Set a timer to allow some time for the user to view the last section
+      lastSectionTimerRef.current = window.setTimeout(() => {
+        hasViewedLastSectionRef.current = true;
+        console.log("Last section viewed, waiting for one more scroll");
       }, 800); // Give time for animation and viewing
     }
     
     return () => {
       // Clean up timer on unmount or section change
-      if (section3TimerRef.current) {
-        window.clearTimeout(section3TimerRef.current);
-        section3TimerRef.current = null;
+      if (lastSectionTimerRef.current) {
+        window.clearTimeout(lastSectionTimerRef.current);
+        lastSectionTimerRef.current = null;
       }
     };
   }, [activeSection, sectionCount]);
@@ -54,10 +59,19 @@ export const useScrollJack = (children: React.ReactNode) => {
       // If we're already scrolling, don't process another scroll
       if (isScrolling) return;
       
-      // If we've viewed section 3 and we're scrolling down, enable normal scrolling
-      if (hasViewedSection3Ref.current && activeSection === sectionCount - 1 && e.deltaY > 0) {
+      // If we've viewed the last section, seen the extra scroll, and we're scrolling down, 
+      // enable normal scrolling
+      if (hasViewedLastSectionRef.current && hasExtraScrollRef.current && activeSection === sectionCount - 1 && e.deltaY > 0) {
         setHasReachedEnd(true);
         return; // Allow normal scrolling behavior
+      }
+      
+      // Handle the extra scroll after viewing the last section
+      if (hasViewedLastSectionRef.current && !hasExtraScrollRef.current && activeSection === sectionCount - 1 && e.deltaY > 0) {
+        e.preventDefault();
+        hasExtraScrollRef.current = true;
+        console.log("Extra scroll detected, next scroll will enable normal scrolling");
+        return;
       }
       
       // If we're at the first section and scrolling up, allow normal page scrolling up
@@ -113,7 +127,8 @@ export const useScrollJack = (children: React.ReactNode) => {
           // Add some position check to make sure we're really scrolling up into the container
           if (rect.bottom < window.innerHeight * 1.5) {
             setHasReachedEnd(false);
-            hasViewedSection3Ref.current = false; // Reset the section 3 viewed state
+            hasViewedLastSectionRef.current = false; // Reset the viewed state
+            hasExtraScrollRef.current = false; // Reset the extra scroll state
             // Force active section to be the last one
             setActiveSection(sectionCount - 1);
           }
