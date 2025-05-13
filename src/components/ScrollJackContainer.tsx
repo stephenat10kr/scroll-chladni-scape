@@ -139,18 +139,18 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                     // Safely check if children exists in props using type assertion for proper TypeScript handling
                     if ('children' in sectionChild.props) {
                       // Use type assertion to help TypeScript understand the structure
-                      const childProps = sectionChild.props as React.PropsWithChildren<unknown>;
+                      const childProps = sectionChild.props as React.PropsWithChildren<any>;
                       const childrenElements = React.Children.toArray(childProps.children);
                       const filteredChildren = childrenElements.filter(element => {
                         return !(React.isValidElement(element) && element.type === 'h1');
                       });
                       
                       if (filteredChildren.length > 0) {
-                        // Use proper typing for React.cloneElement with explicit type casting
+                        // Use proper typing for React.cloneElement to avoid type errors
                         return React.cloneElement(
-                          sectionChild, 
+                          sectionChild as React.ReactElement<any>, 
                           { 
-                            ...sectionChild.props,  
+                            ...sectionChild.props as object,  
                             children: filteredChildren 
                           } 
                         );
