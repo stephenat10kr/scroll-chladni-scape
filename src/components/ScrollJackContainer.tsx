@@ -39,12 +39,14 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
       />
       
       {/* Render modified sections */}
-      {React.Children.map(children, (child, index) => {
-        if (React.isValidElement(child)) {
-          return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);
-        }
-        return child;
-      })}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {React.Children.map(children, (child, index) => {
+          if (React.isValidElement(child)) {
+            return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);
+          }
+          return child;
+        })}
+      </div>
       
       {/* Navigation dots component */}
       <NavigationDots 

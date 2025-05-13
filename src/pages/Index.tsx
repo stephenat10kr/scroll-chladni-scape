@@ -45,8 +45,8 @@ const Index = () => {
           </section>
         </ScrollJackContainer>
         
-        {/* Red box content with clear separation from scrolljack container */}
-        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center mt-0">
+        {/* Red box content positioned out of screen initially until scrolled to */}
+        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center transform translate-y-0">
           <div className="text-center">
             <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
             <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">

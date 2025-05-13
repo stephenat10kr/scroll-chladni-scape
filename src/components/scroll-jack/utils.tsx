@@ -45,7 +45,7 @@ export const createModifiedSection = (
     >
       {React.cloneElement(child, {
         ...child.props,
-        className: `${child.props.className || ''} flex items-center justify-center h-full`,
+        className: `${child.props.className || ''} flex items-center justify-center h-full w-full`,
         children: React.Children.map(child.props.children, (sectionChild) => {
           if (!React.isValidElement(sectionChild)) {
             return sectionChild;
@@ -65,7 +65,7 @@ export const createModifiedSection = (
                   sectionChild,
                   {
                     ...sectionChildProps,
-                    className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center h-full`,
+                    className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center h-full w-full`,
                     children: filteredChildren
                   }
                 );
