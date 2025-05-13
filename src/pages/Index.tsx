@@ -6,6 +6,16 @@ const Index = () => {
   return (
     <ChladniPattern>
       <div className="flex flex-col">
+        {/* Red box content above scroll-jacking */}
+        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
+            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
+              This content appears before scrolling through the scroll-jacked sections. Normal scrolling takes place here.
+            </p>
+          </div>
+        </div>
+        
         {/* First ScrollJackContainer */}
         <ScrollJackContainer
           titles={["Section 1", "Section 2", "Section 3"]}
