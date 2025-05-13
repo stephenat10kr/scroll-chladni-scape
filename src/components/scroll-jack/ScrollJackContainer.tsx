@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import SectionTitle from './SectionTitle';
 import ScrollSection from './ScrollSection';
 import NavigationDots from './NavigationDots';
@@ -47,7 +47,12 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   return (
     <div 
       ref={containerRef} 
-      className={`h-screen ${allSectionsViewed ? "" : "overflow-hidden"} relative`}
+      className={`relative h-screen ${allSectionsViewed ? "" : "overflow-hidden"}`}
+      style={{
+        // Add a distinct boundary for the scrolljack container
+        scrollSnapAlign: 'start',
+        scrollSnapStop: 'always'
+      }}
     >
       {/* Fixed title area with animations */}
       <SectionTitle 

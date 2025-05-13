@@ -9,54 +9,90 @@ export const useScrollJack = (sectionCount: number) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [allSectionsViewed, setAllSectionsViewed] = useState(false);
   
-  // Add scroll sensitivity threshold
-  const scrollThreshold = 50; // Higher value = less sensitive
+  // Add scroll sensitivity threshold with a slightly higher value for smoother scrolling
+  const scrollThreshold = 30; // Lower value = more sensitive, adjust based on testing
   const scrollAccumulator = useRef(0);
   
   // Track if we've scrolled past the container
   const scrolledPast = useRef(false);
+  // Track if we're above the container
+  const scrolledAbove = useRef(false);
+  // Track last scroll timestamp for debouncing
+  const lastScrollTime = useRef(Date.now());
+  // Scroll debounce time in ms
+  const scrollDebounceTime = 50;
   
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
+      // Debounce rapid scroll events
+      const now = Date.now();
+      if (now - lastScrollTime.current < scrollDebounceTime) {
+        e.preventDefault();
+        return;
+      }
+      lastScrollTime.current = now;
+      
       const container = containerRef.current;
       if (!container) return;
       
       // Get container position relative to viewport
       const containerRect = container.getBoundingClientRect();
-      const isContainerVisible = 
-        containerRect.top < window.innerHeight && 
-        containerRect.bottom > 0;
+      
+      // Check if we're above the container
+      if (containerRect.top > window.innerHeight) {
+        scrolledAbove.current = true;
+        return; // We're above the container, use normal scrolling
+      }
       
       // Check if we've scrolled completely past the container
       if (containerRect.bottom <= 0) {
         scrolledPast.current = true;
+        scrolledAbove.current = false;
         return; // We're below the container, use normal scrolling
       }
       
       // If we're scrolling back up into the container from below
       if (scrolledPast.current && containerRect.bottom > 0 && e.deltaY < 0) {
+        e.preventDefault();
         // Reset the flag when scrolling back into view
         scrolledPast.current = false;
         // Re-enable scrolljacking by resetting allSectionsViewed
         setAllSectionsViewed(false);
         setActiveSection(sectionCount - 1); // Start from the last section when scrolling up
-      }
-      
-      // If all sections have been viewed and we're not scrolling back up into container, don't interfere
-      if (allSectionsViewed && !scrolledPast.current) {
         return;
       }
       
+      // If we're scrolling down into the container from above
+      if (scrolledAbove.current && containerRect.top < window.innerHeight && e.deltaY > 0) {
+        e.preventDefault();
+        // Reset the flag when scrolling back into view
+        scrolledAbove.current = false;
+        // Re-enable scrolljacking by resetting allSectionsViewed
+        setAllSectionsViewed(false);
+        setActiveSection(0); // Start from the first section when scrolling down
+        return;
+      }
+      
+      // If all sections have been viewed and we're not scrolling back in, don't interfere
+      if (allSectionsViewed && !scrolledPast.current && !scrolledAbove.current) {
+        return;
+      }
+      
+      // Check if the container is visible in the viewport
+      const isContainerVisible = 
+        containerRect.top < window.innerHeight && 
+        containerRect.bottom > 0;
+      
       // Only apply scroll jacking if the container is visible in the viewport
-      if (isContainerVisible && !scrolledPast.current) {
+      if (isContainerVisible && !scrolledPast.current && !scrolledAbove.current) {
         e.preventDefault();
         
         if (isScrolling) return;
         
-        // Accumulate scroll value to reduce sensitivity
+        // Accumulate scroll value for smoother transition
         scrollAccumulator.current += Math.abs(e.deltaY);
         
-        // Only trigger scroll action if the accumulated value exceeds the threshold
+        // Only trigger scroll action if accumulated value exceeds threshold
         if (scrollAccumulator.current > scrollThreshold) {
           setIsScrolling(true);
           
@@ -83,6 +119,14 @@ export const useScrollJack = (sectionCount: number) => {
             return;
           }
           
+          // If we're at the first section and trying to move up,
+          // allow normal scroll behavior
+          if (activeSection === 0 && direction < 0) {
+            scrolledAbove.current = true;
+            setIsScrolling(false);
+            return;
+          }
+          
           setActiveSection(newSection);
           
           // Reset accumulator after action is triggered
@@ -91,7 +135,7 @@ export const useScrollJack = (sectionCount: number) => {
           // Add delay before allowing another scroll
           setTimeout(() => {
             setIsScrolling(false);
-          }, 700); // Adjust timing as needed
+          }, 700); // Animation timing
         }
       }
     };
@@ -105,6 +149,8 @@ export const useScrollJack = (sectionCount: number) => {
   }, [activeSection, isScrolling, sectionCount, allSectionsViewed]);
 
   const handleSectionChange = (index: number) => {
+    if (isScrolling) return;
+    
     setPreviousSection(activeSection);
     setAnimationDirection(index > activeSection ? 'up' : 'down');
     setActiveSection(index);
