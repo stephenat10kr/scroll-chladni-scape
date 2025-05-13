@@ -81,15 +81,15 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   return (
     <div ref={containerRef} className="h-screen overflow-hidden relative">
-      {/* Fixed title area with animations */}
-      <div className="absolute top-0 left-0 w-full z-30 pt-12 pb-2 overflow-hidden">
-        <div className="text-center relative h-24">
+      {/* Fixed title area with animations - reduced bottom padding */}
+      <div className="absolute top-0 left-0 w-full z-30 pt-8 pb-0 overflow-hidden">
+        <div className="text-center relative h-16">
           {/* Title animations */}
           {sectionTitles.map((title, index) => {
             const isActive = index === activeSection;
             const wasActive = index === previousSection;
             
-            let titleClass = "text-5xl md:text-7xl font-bold mb-2 text-white absolute w-full left-0 transition-all duration-700 opacity-0";
+            let titleClass = "text-5xl md:text-7xl font-bold mb-0 text-white absolute w-full left-0 transition-all duration-700 opacity-0";
             
             if (isActive) {
               titleClass += " opacity-100 translate-y-0";
@@ -128,7 +128,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
             >
               {React.cloneElement(child, {
                 ...child.props,
-                className: `${child.props.className || ''} pt-32`, // Adjust padding-top for content spacing
+                className: `${child.props.className || ''} pt-20`, // Reduced padding-top
                 children: React.Children.map(child.props.children, (sectionChild) => {
                   if (React.isValidElement(sectionChild)) {
                     // Find and hide the original title in the content
