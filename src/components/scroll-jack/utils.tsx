@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 // Extract titles from sections
@@ -34,9 +35,10 @@ export const createModifiedSection = (
 ) => {
   return (
     <div
-      className="absolute top-0 left-0 w-full h-full transition-transform duration-700 flex items-center justify-center"
+      className="absolute top-0 left-0 w-full h-full flex items-center justify-center"
       style={{
         transform: `translateY(${(index - activeSection) * 100}%)`,
+        transition: 'transform 1000ms ease-in-out', // Increased from 700ms to 1000ms for slower scrolling
         zIndex: index === activeSection ? 10 : 0,
         opacity: hasReachedEnd && index === sectionCount - 1 ? 0 : 1,
         pointerEvents: hasReachedEnd && index === sectionCount - 1 ? 'none' : 'auto'

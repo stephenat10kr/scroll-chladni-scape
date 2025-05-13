@@ -85,7 +85,7 @@ export const useScrollJack = (children: React.ReactNode) => {
             
             setTimeout(() => {
               setIsTransitioning(false);
-            }, 800);
+            }, 1200); // Increased from 800ms for slower transition
           }
         } else {
           // Normal section navigation
@@ -97,7 +97,7 @@ export const useScrollJack = (children: React.ReactNode) => {
               
               setTimeout(() => {
                 setIsTransitioning(false);
-              }, 800);
+              }, 1200); // Increased from 800ms for slower transition
             }
           } else {
             // We're not at the last section, ensure hasReachedEnd is false
@@ -111,10 +111,10 @@ export const useScrollJack = (children: React.ReactNode) => {
         // Reset accumulator after action is triggered
         scrollAccumulator.current = 0;
         
-        // Shorter delay before allowing another scroll
+        // Longer delay before allowing another scroll
         setTimeout(() => {
           setIsScrolling(false);
-        }, 500);
+        }, 700); // Increased from 500ms for slower scrolling
       }
     };
     

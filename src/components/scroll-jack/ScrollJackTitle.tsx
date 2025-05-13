@@ -21,7 +21,10 @@ const ScrollJackTitle: React.FC<ScrollJackTitleProps> = ({
           const isActive = index === activeSection;
           const wasActive = index === previousSection;
           
-          let titleClass = "text-5xl md:text-7xl font-bold mb-0 text-white absolute w-full left-0 transition-all duration-700 opacity-0";
+          let titleClass = "text-5xl md:text-7xl font-bold mb-0 text-white absolute w-full left-0 transition-all opacity-0";
+          
+          // Added longer duration for title transitions from 700ms to 1000ms
+          titleClass += " duration-1000";
           
           if (isActive) {
             titleClass += " opacity-100 translate-y-0";
