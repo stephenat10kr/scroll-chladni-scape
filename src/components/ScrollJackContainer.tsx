@@ -20,6 +20,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   // Track if we've reached the end of the scroll sections
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  // Track if we're transitioning to the next content
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Extract titles from each section for the fixed title
   const sectionTitles = React.Children.map(children, (child) => {
@@ -45,6 +47,9 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
   
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
+      // If we're currently transitioning, don't handle wheel events
+      if (isTransitioning) return;
+      
       // If we've reached the end and scrolling down further, allow normal page scrolling
       if (hasReachedEnd && e.deltaY > 0) {
         return; // Let the event propagate naturally for normal scrolling
@@ -85,6 +90,12 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
         // Check if we've reached the end or beginning
         if (newSection === sectionCount - 1 && direction > 0) {
           setHasReachedEnd(true);
+          setIsTransitioning(true);
+          
+          // Set a timeout to allow the transition to complete before allowing more scroll
+          setTimeout(() => {
+            setIsTransitioning(false);
+          }, 800);
         } else if (activeSection === 0 && direction < 0) {
           // We're at the top and trying to scroll up
           // Normal scrolling will be allowed
@@ -105,12 +116,22 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
     };
     
     const handleScroll = () => {
+      // If we're transitioning, don't handle scroll events
+      if (isTransitioning) return;
+      
       // If user has scrolled back up the page and the container is in view again,
       // re-enable scrolljacking
       if (hasReachedEnd && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
+        
+        // If the container is back in view and we're scrolling up
         if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
-          setHasReachedEnd(false);
+          // Add some position check to make sure we're really scrolling up into the container
+          if (rect.bottom < window.innerHeight * 1.5) {
+            setHasReachedEnd(false);
+            // Force active section to be the last one
+            setActiveSection(sectionCount - 1);
+          }
         }
       }
     };
@@ -129,7 +150,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
         container.removeEventListener('wheel', handleWheel);
       }
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isTransitioning]);
   
   return (
     <div ref={containerRef} className="h-screen overflow-hidden relative">
@@ -176,6 +197,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
               style={{
                 transform: `translateY(${(index - activeSection) * 100}%)`,
                 zIndex: index === activeSection ? 10 : 0,
+                opacity: hasReachedEnd && index === sectionCount - 1 ? 0 : 1,
+                pointerEvents: hasReachedEnd && index === sectionCount - 1 ? 'none' : 'auto',
               }}
             >
               {React.cloneElement(child as React.ReactElement<any>, {
