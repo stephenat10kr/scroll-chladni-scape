@@ -9,9 +9,9 @@ const Index = () => {
         {/* First ScrollJackContainer */}
         <ScrollJackContainer>
           {/* Section 1 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center items-center">
+          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-end items-center pb-32 md:pb-40">
             <div className="text-center w-full">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 1</h1>
+              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white opacity-0">Section 1</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Discover innovative scroll animations</li>
                 <li>• Experience seamless section transitions</li>
@@ -21,9 +21,9 @@ const Index = () => {
           </section>
 
           {/* Section 2 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center items-center">
+          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-end items-center pb-32 md:pb-40">
             <div className="text-center w-full">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 2</h1>
+              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white opacity-0">Section 2</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Titles remain fixed while content scrolls</li>
                 <li>• Animated transitions between sections</li>
@@ -33,9 +33,9 @@ const Index = () => {
           </section>
 
           {/* Section 3 */}
-          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-center items-center">
+          <section className="container mx-auto px-4 min-h-screen flex flex-col justify-end items-center pb-32 md:pb-40">
             <div className="text-center w-full">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white">Section 3</h1>
+              <h1 className="text-5xl md:text-7xl font-bold mb-4 text-white opacity-0">Section 3</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Interactive navigation dots</li>
                 <li>• Responsive design for all devices</li>

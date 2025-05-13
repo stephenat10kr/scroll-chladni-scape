@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 // Extract titles from sections
@@ -55,21 +54,14 @@ export const createModifiedSection = (
           if (React.isValidElement(sectionChild)) {
             const sectionChildProps = sectionChild.props as any;
             if (sectionChildProps && 'children' in sectionChildProps) {
-              const childrenElements = React.Children.toArray(sectionChildProps.children);
-              const filteredChildren = childrenElements.filter(element => {
-                return !(React.isValidElement(element) && element.type === 'h1');
-              });
-              
-              if (filteredChildren.length > 0) {
-                return React.cloneElement(
-                  sectionChild,
-                  {
-                    ...sectionChildProps,
-                    className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center h-full w-full`,
-                    children: filteredChildren
-                  }
-                );
-              }
+              // Keep the structure but ensure h1 stays hidden with opacity-0
+              return React.cloneElement(
+                sectionChild,
+                {
+                  ...sectionChildProps,
+                  className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center h-full w-full`
+                }
+              );
             }
           }
           return sectionChild;

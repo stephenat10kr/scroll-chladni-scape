@@ -15,7 +15,7 @@ const ScrollJackTitle: React.FC<ScrollJackTitleProps> = ({
   animationDirection
 }) => {
   return (
-    <div className="absolute top-1/2 left-0 w-full z-30 transform -translate-y-1/2 overflow-hidden">
+    <div className="absolute top-1/3 left-0 w-full z-30 transform -translate-y-1/2 overflow-hidden">
       <div className="text-center relative h-16">
         {titles.map((title, index) => {
           const isActive = index === activeSection;
