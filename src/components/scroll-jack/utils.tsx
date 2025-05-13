@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 // Extract titles from sections
@@ -24,7 +25,7 @@ export const extractSectionTitles = (children: React.ReactNode) => {
   });
 };
 
-// Create modified section component with hidden original title and improved centering
+// Create modified section component with proper vertical centering
 export const createModifiedSection = (
   child: React.ReactElement, 
   index: number, 
@@ -34,7 +35,7 @@ export const createModifiedSection = (
 ) => {
   return (
     <div
-      className="absolute top-0 left-0 w-full h-full transition-transform duration-700 flex items-center justify-center"
+      className="absolute inset-0 w-full h-full transition-transform duration-700 flex items-center justify-center"
       style={{
         transform: `translateY(${(index - activeSection) * 100}%)`,
         zIndex: index === activeSection ? 10 : 0,
@@ -45,27 +46,6 @@ export const createModifiedSection = (
       {React.cloneElement(child, {
         ...child.props,
         className: `${child.props.className || ''} flex items-center justify-center h-full w-full`,
-        children: React.Children.map(child.props.children, (sectionChild) => {
-          if (!React.isValidElement(sectionChild)) {
-            return sectionChild;
-          }
-          
-          // Type-safe approach for manipulating React elements with children
-          if (React.isValidElement(sectionChild)) {
-            const sectionChildProps = sectionChild.props as any;
-            if (sectionChildProps && 'children' in sectionChildProps) {
-              // Keep the structure but ensure content is properly centered
-              return React.cloneElement(
-                sectionChild,
-                {
-                  ...sectionChildProps,
-                  className: `${sectionChildProps.className || ''} flex flex-col items-center justify-center h-full w-full`
-                }
-              );
-            }
-          }
-          return sectionChild;
-        })
       })}
     </div>
   );
