@@ -186,24 +186,21 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children }) =
                     return sectionChild;
                   }
                   
-                  // Find and hide the original title in the content
-                  if (React.isValidElement(sectionChild) && sectionChild.props) {
-                    // Safely check if children exists in props
-                    if ('children' in sectionChild.props) {
-                      const childProps = sectionChild.props;
-                      const childrenElements = React.Children.toArray(childProps.children);
+                  // Type-safe approach for manipulating React elements with children
+                  if (React.isValidElement<{ children?: React.ReactNode }>(sectionChild)) {
+                    if (sectionChild.props && 'children' in sectionChild.props) {
+                      const childrenElements = React.Children.toArray(sectionChild.props.children);
                       const filteredChildren = childrenElements.filter(element => {
                         return !(React.isValidElement(element) && element.type === 'h1');
                       });
                       
                       if (filteredChildren.length > 0) {
-                        // Fix the type error by explicitly typing the cloneElement parameters
                         return React.cloneElement(
                           sectionChild,
-                          { 
-                            ...childProps, 
-                            children: filteredChildren 
-                          } 
+                          {
+                            ...sectionChild.props,
+                            children: filteredChildren
+                          }
                         );
                       }
                     }
