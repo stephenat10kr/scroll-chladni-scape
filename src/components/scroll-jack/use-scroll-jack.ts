@@ -11,20 +11,14 @@ export const useScrollJack = (children: React.ReactNode) => {
   const childrenArray = React.Children.toArray(children);
   const sectionCount = childrenArray.length;
   
-  // Add scroll sensitivity threshold - making it even less sensitive for more reliable scrolling
-  const scrollThreshold = 15; // Lower value = more sensitive (reduced from 20)
+  // Add scroll sensitivity threshold
+  const scrollThreshold = 50; // Higher value = less sensitive
   const scrollAccumulator = useRef(0);
   
   // Track if we've reached the end of the scroll sections
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   // Track if we're transitioning to the next content
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // Add a ref to track last direction for more reliable section 3 transitions
-  const lastDirectionRef = useRef<number>(0);
-  // Add lock to prevent multiple scroll events during section 3 transition
-  const lockSection3Ref = useRef<boolean>(false);
-  // Add timer ref to ensure section 3 is visible long enough
-  const section3TimerRef = useRef<number | null>(null);
   
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
@@ -32,10 +26,7 @@ export const useScrollJack = (children: React.ReactNode) => {
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       // If we're currently transitioning, don't handle wheel events
-      if (isTransitioning) {
-        console.log('Ignoring wheel - currently transitioning');
-        return;
-      }
+      if (isTransitioning) return;
       
       // If we've reached the end and scrolling down further, allow normal page scrolling
       if (hasReachedEnd && e.deltaY > 0) {
@@ -50,13 +41,7 @@ export const useScrollJack = (children: React.ReactNode) => {
       // In all other cases, handle scroll-jacking
       e.preventDefault();
       
-      if (isScrolling) {
-        console.log('Ignoring wheel - already scrolling');
-        return;
-      }
-      
-      // Store last direction to help with section 3 reliability
-      lastDirectionRef.current = e.deltaY > 0 ? 1 : -1;
+      if (isScrolling) return;
       
       // Accumulate scroll value to reduce sensitivity
       scrollAccumulator.current += Math.abs(e.deltaY);
@@ -80,80 +65,31 @@ export const useScrollJack = (children: React.ReactNode) => {
           sectionCount - 1
         );
         
-        console.log(`Scroll direction: ${direction}, current: ${activeSection}, target: ${newSection}`);
-        
-        // Special handling for section 3 (index 2)
-        if (activeSection === 1 && direction > 0) {
-          // Going from section 2 to section 3
-          console.log("Transitioning from section 2 to section 3");
-          
-          // Set lock to prevent multiple transitions
-          if (lockSection3Ref.current) {
-            console.log("Section 3 transition already in progress");
-            return;
-          }
-          
-          lockSection3Ref.current = true;
-          
-          // Force the activeSection to be 2 (section 3)
-          setActiveSection(2);
-          
-          // Set transitioning state to enforce display time
+        // Check if we've reached the end or beginning
+        if (newSection === sectionCount - 1 && direction > 0) {
+          setHasReachedEnd(true);
           setIsTransitioning(true);
           
-          // Clear any existing timer
-          if (section3TimerRef.current !== null) {
-            window.clearTimeout(section3TimerRef.current);
-          }
-          
-          // Set a timer to ensure section 3 remains visible for at least 2 seconds
-          section3TimerRef.current = window.setTimeout(() => {
-            console.log("Section 3 display time completed");
+          // Set a timeout to allow the transition to complete before allowing more scroll
+          setTimeout(() => {
             setIsTransitioning(false);
-            lockSection3Ref.current = false;
-            
-            // If this is the last section, handle end of section logic
-            if (2 === sectionCount - 1) {
-              setHasReachedEnd(true);
-            }
-            
-            section3TimerRef.current = null;
-          }, 2000); // Ensure section 3 is visible for 2 seconds
+          }, 800);
+        } else if (activeSection === 0 && direction < 0) {
+          // We're at the top and trying to scroll up
+          // Normal scrolling will be allowed
         } else {
-          // Normal section navigation
-          if (newSection === sectionCount - 1) {
-            // We've reached the last section
-            if (direction > 0) {
-              setHasReachedEnd(true);
-              setIsTransitioning(true);
-              
-              // Clear any existing timer
-              if (section3TimerRef.current !== null) {
-                window.clearTimeout(section3TimerRef.current);
-              }
-              
-              // Set a timer to allow scrolling again after the last section has been visible
-              section3TimerRef.current = window.setTimeout(() => {
-                setIsTransitioning(false);
-                section3TimerRef.current = null;
-              }, 2000); // Keep last section visible for 2 seconds
-            }
-          } else {
-            // We're not at the last section, ensure hasReachedEnd is false
-            setHasReachedEnd(false);
-          }
-          
-          setActiveSection(newSection);
-          console.log(`Navigating to section: ${newSection}`);
+          setHasReachedEnd(false);
         }
+        
+        setActiveSection(newSection);
         
         // Reset accumulator after action is triggered
         scrollAccumulator.current = 0;
         
-        // Longer delay before allowing another scroll
+        // Add delay before allowing another scroll
         setTimeout(() => {
           setIsScrolling(false);
-        }, 1000); // Increased for more reliable scrolling
+        }, 700); // Adjust timing as needed
       }
     };
     
@@ -170,20 +106,11 @@ export const useScrollJack = (children: React.ReactNode) => {
         if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
           // Add some position check to make sure we're really scrolling up into the container
           if (rect.bottom < window.innerHeight * 1.5) {
-            console.log("Re-entering scrolljack container");
             setHasReachedEnd(false);
             // Force active section to be the last one
             setActiveSection(sectionCount - 1);
           }
         }
-      }
-    };
-    
-    // Cleanup function to clear any timers
-    const cleanupTimers = () => {
-      if (section3TimerRef.current !== null) {
-        window.clearTimeout(section3TimerRef.current);
-        section3TimerRef.current = null;
       }
     };
     
@@ -200,7 +127,6 @@ export const useScrollJack = (children: React.ReactNode) => {
       if (container) {
         container.removeEventListener('wheel', handleWheel);
       }
-      cleanupTimers();
     };
   }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isTransitioning]);
 
