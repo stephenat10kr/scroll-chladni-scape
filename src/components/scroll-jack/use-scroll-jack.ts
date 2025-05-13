@@ -11,8 +11,8 @@ export const useScrollJack = (children: React.ReactNode) => {
   const childrenArray = React.Children.toArray(children);
   const sectionCount = childrenArray.length;
   
-  // Add scroll sensitivity threshold
-  const scrollThreshold = 20; // Lower value = more sensitive (reduced further from 30)
+  // Add scroll sensitivity threshold - making it even less sensitive for more reliable scrolling
+  const scrollThreshold = 15; // Lower value = more sensitive (reduced from 20)
   const scrollAccumulator = useRef(0);
   
   // Track if we've reached the end of the scroll sections
@@ -21,6 +21,8 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   // Add a ref to track last direction for more reliable section 3 transitions
   const lastDirectionRef = useRef<number>(0);
+  // Add lock to prevent multiple scroll events during section 3 transition
+  const lockSection3Ref = useRef<boolean>(false);
   
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
@@ -28,7 +30,10 @@ export const useScrollJack = (children: React.ReactNode) => {
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       // If we're currently transitioning, don't handle wheel events
-      if (isTransitioning) return;
+      if (isTransitioning) {
+        console.log('Ignoring wheel - currently transitioning');
+        return;
+      }
       
       // If we've reached the end and scrolling down further, allow normal page scrolling
       if (hasReachedEnd && e.deltaY > 0) {
@@ -43,7 +48,10 @@ export const useScrollJack = (children: React.ReactNode) => {
       // In all other cases, handle scroll-jacking
       e.preventDefault();
       
-      if (isScrolling) return;
+      if (isScrolling) {
+        console.log('Ignoring wheel - already scrolling');
+        return;
+      }
       
       // Store last direction to help with section 3 reliability
       lastDirectionRef.current = e.deltaY > 0 ? 1 : -1;
@@ -70,10 +78,20 @@ export const useScrollJack = (children: React.ReactNode) => {
           sectionCount - 1
         );
         
+        console.log(`Scroll direction: ${direction}, current: ${activeSection}, target: ${newSection}`);
+        
         // Special handling for section 3 (index 2)
         if (activeSection === 1 && direction > 0) {
           // Going from section 2 to section 3
-          console.log("Trying to go to section 3");
+          console.log("Transitioning from section 2 to section 3");
+          
+          // Set lock to prevent multiple transitions
+          if (lockSection3Ref.current) {
+            console.log("Section 3 transition already in progress");
+            return;
+          }
+          
+          lockSection3Ref.current = true;
           
           // Force the activeSection to be 2 (section 3)
           setActiveSection(2);
@@ -85,7 +103,12 @@ export const useScrollJack = (children: React.ReactNode) => {
             
             setTimeout(() => {
               setIsTransitioning(false);
-            }, 1200); // Increased from 800ms for slower transition
+              lockSection3Ref.current = false;
+            }, 1200);
+          } else {
+            setTimeout(() => {
+              lockSection3Ref.current = false;
+            }, 1200);
           }
         } else {
           // Normal section navigation
@@ -97,7 +120,7 @@ export const useScrollJack = (children: React.ReactNode) => {
               
               setTimeout(() => {
                 setIsTransitioning(false);
-              }, 1200); // Increased from 800ms for slower transition
+              }, 1200);
             }
           } else {
             // We're not at the last section, ensure hasReachedEnd is false
@@ -114,7 +137,7 @@ export const useScrollJack = (children: React.ReactNode) => {
         // Longer delay before allowing another scroll
         setTimeout(() => {
           setIsScrolling(false);
-        }, 700); // Increased from 500ms for slower scrolling
+        }, 800); // Increased for more reliable scrolling
       }
     };
     
@@ -131,6 +154,7 @@ export const useScrollJack = (children: React.ReactNode) => {
         if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
           // Add some position check to make sure we're really scrolling up into the container
           if (rect.bottom < window.innerHeight * 1.5) {
+            console.log("Re-entering scrolljack container");
             setHasReachedEnd(false);
             // Force active section to be the last one
             setActiveSection(sectionCount - 1);
