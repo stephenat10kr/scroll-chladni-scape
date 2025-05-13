@@ -23,6 +23,8 @@ export const useScrollJack = (children: React.ReactNode) => {
   const lastDirectionRef = useRef<number>(0);
   // Add lock to prevent multiple scroll events during section 3 transition
   const lockSection3Ref = useRef<boolean>(false);
+  // Add timer ref to ensure section 3 is visible long enough
+  const section3TimerRef = useRef<number | null>(null);
   
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
@@ -96,20 +98,27 @@ export const useScrollJack = (children: React.ReactNode) => {
           // Force the activeSection to be 2 (section 3)
           setActiveSection(2);
           
-          // If this is the last section, handle end of section logic
-          if (2 === sectionCount - 1) {
-            setHasReachedEnd(true);
-            setIsTransitioning(true);
-            
-            setTimeout(() => {
-              setIsTransitioning(false);
-              lockSection3Ref.current = false;
-            }, 1200);
-          } else {
-            setTimeout(() => {
-              lockSection3Ref.current = false;
-            }, 1200);
+          // Set transitioning state to enforce display time
+          setIsTransitioning(true);
+          
+          // Clear any existing timer
+          if (section3TimerRef.current !== null) {
+            window.clearTimeout(section3TimerRef.current);
           }
+          
+          // Set a timer to ensure section 3 remains visible for at least 2 seconds
+          section3TimerRef.current = window.setTimeout(() => {
+            console.log("Section 3 display time completed");
+            setIsTransitioning(false);
+            lockSection3Ref.current = false;
+            
+            // If this is the last section, handle end of section logic
+            if (2 === sectionCount - 1) {
+              setHasReachedEnd(true);
+            }
+            
+            section3TimerRef.current = null;
+          }, 2000); // Ensure section 3 is visible for 2 seconds
         } else {
           // Normal section navigation
           if (newSection === sectionCount - 1) {
@@ -118,9 +127,16 @@ export const useScrollJack = (children: React.ReactNode) => {
               setHasReachedEnd(true);
               setIsTransitioning(true);
               
-              setTimeout(() => {
+              // Clear any existing timer
+              if (section3TimerRef.current !== null) {
+                window.clearTimeout(section3TimerRef.current);
+              }
+              
+              // Set a timer to allow scrolling again after the last section has been visible
+              section3TimerRef.current = window.setTimeout(() => {
                 setIsTransitioning(false);
-              }, 1200);
+                section3TimerRef.current = null;
+              }, 2000); // Keep last section visible for 2 seconds
             }
           } else {
             // We're not at the last section, ensure hasReachedEnd is false
@@ -137,7 +153,7 @@ export const useScrollJack = (children: React.ReactNode) => {
         // Longer delay before allowing another scroll
         setTimeout(() => {
           setIsScrolling(false);
-        }, 800); // Increased for more reliable scrolling
+        }, 1000); // Increased for more reliable scrolling
       }
     };
     
@@ -163,6 +179,14 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
     };
     
+    // Cleanup function to clear any timers
+    const cleanupTimers = () => {
+      if (section3TimerRef.current !== null) {
+        window.clearTimeout(section3TimerRef.current);
+        section3TimerRef.current = null;
+      }
+    };
+    
     // Add scroll event listener for re-entering the scrolljack container
     window.addEventListener('scroll', handleScroll);
     
@@ -176,6 +200,7 @@ export const useScrollJack = (children: React.ReactNode) => {
       if (container) {
         container.removeEventListener('wheel', handleWheel);
       }
+      cleanupTimers();
     };
   }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isTransitioning]);
 
