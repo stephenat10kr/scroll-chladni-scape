@@ -11,8 +11,8 @@ const MainContainer: React.FC<MainContainerProps> = ({ children }) => {
   return (
     <ChladniPattern>
       <div className="flex flex-col">
-        {/* Blue box component */}
-        <div className="bg-[#0EA5E9] min-h-screen flex items-center justify-center">
+        {/* Blue box component - 2x viewport height */}
+        <div className="bg-[#0EA5E9] min-h-[200vh] flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Blue Box Content</h2>
             <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
