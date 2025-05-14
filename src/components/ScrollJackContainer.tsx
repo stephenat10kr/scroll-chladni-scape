@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useScrollJack } from './scroll-jack/use-scroll-jack';
 import { createModifiedSection } from './scroll-jack/utils';
 import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
@@ -7,25 +7,20 @@ import NavigationDots from './scroll-jack/NavigationDots';
 import { ScrollJackContainerProps } from './scroll-jack/types';
 
 const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, titles }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const {
+    containerRef,
     activeSection,
     previousSection,
     animationDirection,
     sectionCount,
     hasReachedEnd,
-    isAnimating,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
-    setHasReachedEnd,
-    isScrollJackActive
-  } = useScrollJack(children, containerRef);
+    setHasReachedEnd
+  } = useScrollJack(children);
 
   const handleSectionChange = (index: number) => {
-    // Prevent navigation dot clicks during animations
-    if (isAnimating) return;
-    
     setPreviousSection(activeSection);
     setAnimationDirection(index > activeSection ? 'up' : 'down');
     setActiveSection(index);
@@ -35,7 +30,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   // Reset scroll position when reaching end or beginning
   useEffect(() => {
     if (hasReachedEnd) {
-      window.scrollTo(0, window.scrollY);
+      window.scrollTo(0, 0);
     }
   }, [hasReachedEnd]);
   
@@ -45,42 +40,32 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   return (
     <div 
       ref={containerRef} 
-      className={`min-h-screen relative ${hasReachedEnd ? 'pointer-events-auto' : isScrollJackActive ? 'overflow-hidden' : ''}`}
-      style={{ willChange: 'transform' }}
-      data-scroll-jack-active={isScrollJackActive}
-      data-has-reached-end={hasReachedEnd}
-      data-active-section={activeSection}
+      className={`h-screen overflow-hidden relative ${hasReachedEnd ? 'static' : ''}`}
     >
       {/* Fixed title display component */}
-      {isScrollJackActive && !hasReachedEnd && (
-        <ScrollJackTitle 
-          titles={sectionTitles} 
-          activeSection={activeSection}
-          previousSection={previousSection}
-          animationDirection={animationDirection}
-        />
-      )}
+      <ScrollJackTitle 
+        titles={sectionTitles} 
+        activeSection={activeSection}
+        previousSection={previousSection}
+        animationDirection={animationDirection}
+      />
       
       {/* Render sections with proper vertical centering */}
-      <div className={`${isScrollJackActive ? 'absolute inset-0' : ''} ${hasReachedEnd ? 'pb-screen' : ''}`}>
+      <div className={`absolute inset-0 ${hasReachedEnd ? 'pb-screen' : ''}`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
-            return isScrollJackActive ? 
-              createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount) :
-              child;
+            return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);
           }
           return child;
         })}
       </div>
       
       {/* Navigation dots component */}
-      {isScrollJackActive && !hasReachedEnd && (
-        <NavigationDots 
-          sectionCount={sectionCount} 
-          activeSection={activeSection}
-          onSectionChange={handleSectionChange}
-        />
-      )}
+      <NavigationDots 
+        sectionCount={sectionCount} 
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+      />
     </div>
   );
 };

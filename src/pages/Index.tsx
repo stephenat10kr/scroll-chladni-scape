@@ -6,24 +6,13 @@ const Index = () => {
   return (
     <ChladniPattern>
       <div className="flex flex-col">
-        {/* Normal scrolling frame */}
-        <section className="h-[200vh] bg-[#0EA5E9] flex flex-col items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Welcome</h2>
-            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
-              Scroll down through this normal section to experience the scrolljacking below.
-            </p>
-          </div>
-        </section>
-        
-        {/* ScrollJack frame with titles */}
+        {/* First ScrollJackContainer */}
         <ScrollJackContainer
           titles={["Section 1", "Section 2", "Section 3"]}
         >
           {/* Section 1 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full mt-24">
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Section 1</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Discover innovative scroll animations</li>
                 <li>• Experience seamless section transitions</li>
@@ -35,7 +24,6 @@ const Index = () => {
           {/* Section 2 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full mt-24">
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Section 2</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Titles remain fixed while content scrolls</li>
                 <li>• Animated transitions between sections</li>
@@ -47,7 +35,6 @@ const Index = () => {
           {/* Section 3 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full mt-24">
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Section 3</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Interactive navigation dots</li>
                 <li>• Responsive design for all devices</li>

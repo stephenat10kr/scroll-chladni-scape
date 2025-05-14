@@ -2,17 +2,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { extractSectionTitles } from './utils';
 
-export const useScrollJack = (children: React.ReactNode, containerRef: React.RefObject<HTMLDivElement>) => {
+export const useScrollJack = (children: React.ReactNode) => {
   // Create refs and state in consistent order (prevents React hook order errors)
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
   const [previousSection, setPreviousSection] = useState<number | null>(null);
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
-  const [isScrollJackActive, setIsScrollJackActive] = useState(false);
   
-  // Lower threshold for better responsiveness
-  const scrollThreshold = useRef(30); 
+  // Add scroll sensitivity threshold
+  const scrollThreshold = useRef(50); // Higher value = less sensitive
   const scrollAccumulator = useRef(0);
   const transitionTimeoutRef = useRef<number | null>(null);
   
@@ -24,10 +24,6 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
   
   // Track the last scroll position outside scroll sections
   const lastScrollY = useRef(0);
-  const scrollingTimeoutRef = useRef<number | null>(null);
-  
-  // Add a state to track animation completion
-  const [isAnimating, setIsAnimating] = useState(false);
   
   // Handle cleanup of timeouts
   useEffect(() => {
@@ -35,50 +31,13 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       if (transitionTimeoutRef.current) {
         clearTimeout(transitionTimeoutRef.current);
       }
-      if (scrollingTimeoutRef.current) {
-        clearTimeout(scrollingTimeoutRef.current);
-      }
     };
   }, []);
-  
-  // Observer for intersection with viewport
-  useEffect(() => {
-    if (!containerRef.current) return;
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // Simplified activation logic
-          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
-            setIsScrollJackActive(true);
-            document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
-            console.log("ScrollJack activated, isScrollJackActive:", true);
-          } else if (!entry.isIntersecting || entry.intersectionRatio < 0.1) {
-            setIsScrollJackActive(false);
-            document.body.style.overflow = 'auto';
-            console.log("ScrollJack deactivated, isScrollJackActive:", false);
-          }
-        });
-      },
-      {
-        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5],
-        rootMargin: '0px'
-      }
-    );
-    
-    observer.observe(containerRef.current);
-    
-    return () => {
-      if (containerRef.current) {
-        observer.unobserve(containerRef.current);
-      }
-    };
-  }, [hasReachedEnd]);
   
   useEffect(() => {
     // Track document scroll position to detect when to re-enter scroll-jack
     const handleWindowScroll = () => {
-      if (hasReachedEnd && isScrollJackActive) {
+      if (hasReachedEnd) {
         lastScrollY.current = window.scrollY;
         
         // If user has scrolled back to the section height area and is continuing upward
@@ -96,30 +55,24 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       }
     };
 
-    // Simplified wheel event handler
     const handleWheel = (e: WheelEvent) => {
-      // Skip if not active or already at the end
-      if (!isScrollJackActive || hasReachedEnd) {
-        return;
+      // Allow normal scrolling if we've reached the end
+      if (hasReachedEnd) {
+        return; // Let the event propagate naturally
       }
       
-      // Prevent default to stop normal scrolling
+      // Prevent default in all other cases while in scrolljack mode
       e.preventDefault();
       
-      // Don't process scroll if already scrolling or animating
-      if (isScrolling || isAnimating) return;
+      // Don't process scroll if already scrolling
+      if (isScrolling) return;
       
-      // Accumulate scroll delta
+      // Accumulate scroll value to reduce sensitivity
       scrollAccumulator.current += Math.abs(e.deltaY);
       
-      console.log("Scroll value:", e.deltaY, "accumulated:", scrollAccumulator.current, "threshold:", scrollThreshold.current);
-      
+      // Only trigger scroll action if the accumulated value exceeds the threshold
       if (scrollAccumulator.current > scrollThreshold.current) {
-        // Reset accumulator immediately
-        scrollAccumulator.current = 0;
-        
         setIsScrolling(true);
-        setIsAnimating(true);
         
         // Determine scroll direction
         const direction = e.deltaY > 0 ? 1 : -1;
@@ -146,39 +99,49 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
           }
         }
         
-        // Add shorter delay for better responsiveness
+        // Reset accumulator after action is triggered
+        scrollAccumulator.current = 0;
+        
+        // Add delay before allowing another scroll
         transitionTimeoutRef.current = window.setTimeout(() => {
           setIsScrolling(false);
-        }, 600);
-        
-        // Set a separate timeout for animation completion
-        scrollingTimeoutRef.current = window.setTimeout(() => {
-          setIsAnimating(false);
-        }, 700);
+        }, 700); // Adjust timing as needed for smooth transitions
       }
     };
     
-    // Add the wheel event listener with the proper passive option
-    document.addEventListener('wheel', handleWheel, { passive: false });
+    // Add the wheel event listener to the container
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+    }
     
     // Add window scroll listener for detecting re-entry
     window.addEventListener('scroll', handleWindowScroll);
     
     return () => {
-      document.removeEventListener('wheel', handleWheel);
+      if (container) {
+        container.removeEventListener('wheel', handleWheel);
+      }
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isScrollJackActive, isAnimating]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+
+  // Set initial body style
+  useEffect(() => {
+    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [hasReachedEnd]);
 
   return {
+    containerRef,
     activeSection,
     previousSection,
     animationDirection,
     sectionCount,
     sectionTitles,
     hasReachedEnd,
-    isScrollJackActive,
-    isAnimating,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
