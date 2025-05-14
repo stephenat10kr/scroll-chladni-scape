@@ -2,14 +2,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { extractSectionTitles } from './utils';
 
-export const useScrollJack = (children: React.ReactNode) => {
+export const useScrollJack = (children: React.ReactNode, containerRef: React.RefObject<HTMLDivElement>) => {
   // Create refs and state in consistent order (prevents React hook order errors)
-  const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
   const [previousSection, setPreviousSection] = useState<number | null>(null);
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [isScrollJackActive, setIsScrollJackActive] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -34,10 +34,42 @@ export const useScrollJack = (children: React.ReactNode) => {
     };
   }, []);
   
+  // Observer for intersection with viewport
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // If the container is at least 25% visible in the viewport
+          if (entry.isIntersecting && entry.intersectionRatio > 0.25) {
+            setIsScrollJackActive(true);
+            document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+          } else {
+            setIsScrollJackActive(false);
+            document.body.style.overflow = 'auto';
+          }
+        });
+      },
+      {
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+        rootMargin: '-10% 0px -10% 0px', // Activate a bit before it's fully in view
+      }
+    );
+    
+    observer.observe(containerRef.current);
+    
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, [hasReachedEnd]);
+  
   useEffect(() => {
     // Track document scroll position to detect when to re-enter scroll-jack
     const handleWindowScroll = () => {
-      if (hasReachedEnd) {
+      if (hasReachedEnd && isScrollJackActive) {
         lastScrollY.current = window.scrollY;
         
         // If user has scrolled back to the section height area and is continuing upward
@@ -56,6 +88,9 @@ export const useScrollJack = (children: React.ReactNode) => {
     };
 
     const handleWheel = (e: WheelEvent) => {
+      // Only handle wheel events when scrolljack is active
+      if (!isScrollJackActive) return;
+      
       // Allow normal scrolling if we've reached the end
       if (hasReachedEnd) {
         return; // Let the event propagate naturally
@@ -109,39 +144,29 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
     };
     
-    // Add the wheel event listener to the container
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
+    // Add the wheel event listener to the document when scrolljack is active
+    if (isScrollJackActive) {
+      document.addEventListener('wheel', handleWheel, { passive: false });
     }
     
     // Add window scroll listener for detecting re-entry
     window.addEventListener('scroll', handleWindowScroll);
     
     return () => {
-      if (container) {
-        container.removeEventListener('wheel', handleWheel);
-      }
+      document.removeEventListener('wheel', handleWheel);
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isScrollJackActive]);
 
-  // Set initial body style
-  useEffect(() => {
-    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [hasReachedEnd]);
-
+  // Update types exported to match new functionality
   return {
-    containerRef,
     activeSection,
     previousSection,
     animationDirection,
     sectionCount,
     sectionTitles,
     hasReachedEnd,
+    isScrollJackActive,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,

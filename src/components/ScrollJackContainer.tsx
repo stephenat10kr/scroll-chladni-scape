@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useScrollJack } from './scroll-jack/use-scroll-jack';
 import { createModifiedSection } from './scroll-jack/utils';
 import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
@@ -7,8 +7,8 @@ import NavigationDots from './scroll-jack/NavigationDots';
 import { ScrollJackContainerProps } from './scroll-jack/types';
 
 const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, titles }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const {
-    containerRef,
     activeSection,
     previousSection,
     animationDirection,
@@ -17,8 +17,9 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
-    setHasReachedEnd
-  } = useScrollJack(children);
+    setHasReachedEnd,
+    isScrollJackActive
+  } = useScrollJack(children, containerRef);
 
   const handleSectionChange = (index: number) => {
     setPreviousSection(activeSection);
@@ -30,7 +31,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   // Reset scroll position when reaching end or beginning
   useEffect(() => {
     if (hasReachedEnd) {
-      window.scrollTo(0, 0);
+      window.scrollTo(0, window.scrollY);
     }
   }, [hasReachedEnd]);
   
@@ -40,32 +41,38 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   return (
     <div 
       ref={containerRef} 
-      className={`h-screen overflow-hidden relative ${hasReachedEnd ? 'static' : ''}`}
+      className={`min-h-screen relative ${hasReachedEnd ? 'pointer-events-auto' : isScrollJackActive ? 'overflow-hidden' : ''}`}
     >
       {/* Fixed title display component */}
-      <ScrollJackTitle 
-        titles={sectionTitles} 
-        activeSection={activeSection}
-        previousSection={previousSection}
-        animationDirection={animationDirection}
-      />
+      {isScrollJackActive && (
+        <ScrollJackTitle 
+          titles={sectionTitles} 
+          activeSection={activeSection}
+          previousSection={previousSection}
+          animationDirection={animationDirection}
+        />
+      )}
       
       {/* Render sections with proper vertical centering */}
-      <div className={`absolute inset-0 ${hasReachedEnd ? 'pb-screen' : ''}`}>
+      <div className={`${isScrollJackActive ? 'absolute inset-0' : ''} ${hasReachedEnd ? 'pb-screen' : ''}`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
-            return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);
+            return isScrollJackActive ? 
+              createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount) :
+              child;
           }
           return child;
         })}
       </div>
       
-      {/* Navigation dots component */}
-      <NavigationDots 
-        sectionCount={sectionCount} 
-        activeSection={activeSection}
-        onSectionChange={handleSectionChange}
-      />
+      {/* Navigation dots component - only show when scrolljack is active */}
+      {isScrollJackActive && (
+        <NavigationDots 
+          sectionCount={sectionCount} 
+          activeSection={activeSection}
+          onSectionChange={handleSectionChange}
+        />
+      )}
     </div>
   );
 };
