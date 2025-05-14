@@ -11,8 +11,8 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [isScrollJackActive, setIsScrollJackActive] = useState(false);
   
-  // Add scroll sensitivity threshold
-  const scrollThreshold = useRef(50); // Higher value = less sensitive
+  // Add scroll sensitivity threshold and improve debouncing
+  const scrollThreshold = useRef(80); // Higher value = less sensitive (increased for smoother behavior)
   const scrollAccumulator = useRef(0);
   const transitionTimeoutRef = useRef<number | null>(null);
   
@@ -24,6 +24,10 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
   
   // Track the last scroll position outside scroll sections
   const lastScrollY = useRef(0);
+  const scrollingTimeoutRef = useRef<number | null>(null);
+  
+  // Add a state to track animation completion
+  const [isAnimating, setIsAnimating] = useState(false);
   
   // Handle cleanup of timeouts
   useEffect(() => {
@@ -31,29 +35,36 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       if (transitionTimeoutRef.current) {
         clearTimeout(transitionTimeoutRef.current);
       }
+      if (scrollingTimeoutRef.current) {
+        clearTimeout(scrollingTimeoutRef.current);
+      }
     };
   }, []);
   
-  // Observer for intersection with viewport
+  // Observer for intersection with viewport - improved thresholds for smoother activation
   useEffect(() => {
     if (!containerRef.current) return;
     
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // If the container is at least 25% visible in the viewport
-          if (entry.isIntersecting && entry.intersectionRatio > 0.25) {
-            setIsScrollJackActive(true);
-            document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
-          } else {
-            setIsScrollJackActive(false);
-            document.body.style.overflow = 'auto';
+          // Only change state when crossing threshold boundaries to prevent flicker
+          if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
+            if (!isScrollJackActive) {
+              setIsScrollJackActive(true);
+              document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+            }
+          } else if (!entry.isIntersecting || entry.intersectionRatio < 0.1) {
+            if (isScrollJackActive) {
+              setIsScrollJackActive(false);
+              document.body.style.overflow = 'auto';
+            }
           }
         });
       },
       {
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-        rootMargin: '-10% 0px -10% 0px', // Activate a bit before it's fully in view
+        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], // More granular thresholds
+        rootMargin: '-5% 0px -5% 0px', // Smaller margin for more precise activation
       }
     );
     
@@ -64,7 +75,7 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
         observer.unobserve(containerRef.current);
       }
     };
-  }, [hasReachedEnd]);
+  }, [hasReachedEnd, isScrollJackActive]);
   
   useEffect(() => {
     // Track document scroll position to detect when to re-enter scroll-jack
@@ -87,9 +98,10 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       }
     };
 
+    // Improved wheel event handler with better debouncing
     const handleWheel = (e: WheelEvent) => {
-      // Only handle wheel events when scrolljack is active
-      if (!isScrollJackActive) return;
+      // Only handle wheel events when scrolljack is active and not currently animating
+      if (!isScrollJackActive || isAnimating) return;
       
       // Allow normal scrolling if we've reached the end
       if (hasReachedEnd) {
@@ -105,9 +117,13 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       // Accumulate scroll value to reduce sensitivity
       scrollAccumulator.current += Math.abs(e.deltaY);
       
+      // Log the scroll values for debugging
+      console.log("Scroll updated:", scrollAccumulator.current, "combined norm:", scrollAccumulator.current / scrollThreshold.current);
+      
       // Only trigger scroll action if the accumulated value exceeds the threshold
       if (scrollAccumulator.current > scrollThreshold.current) {
         setIsScrolling(true);
+        setIsAnimating(true);
         
         // Determine scroll direction
         const direction = e.deltaY > 0 ? 1 : -1;
@@ -137,10 +153,15 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
         // Reset accumulator after action is triggered
         scrollAccumulator.current = 0;
         
-        // Add delay before allowing another scroll
+        // Add delay before allowing another scroll - increased for smoother transitions
         transitionTimeoutRef.current = window.setTimeout(() => {
           setIsScrolling(false);
-        }, 700); // Adjust timing as needed for smooth transitions
+        }, 800);
+        
+        // Set a separate timeout for animation completion
+        scrollingTimeoutRef.current = window.setTimeout(() => {
+          setIsAnimating(false);
+        }, 900); // Slightly longer than transition time
       }
     };
     
@@ -156,9 +177,8 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       document.removeEventListener('wheel', handleWheel);
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isScrollJackActive]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isScrollJackActive, isAnimating]);
 
-  // Update types exported to match new functionality
   return {
     activeSection,
     previousSection,
@@ -167,6 +187,7 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
     sectionTitles,
     hasReachedEnd,
     isScrollJackActive,
+    isAnimating,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,

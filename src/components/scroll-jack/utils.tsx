@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 // Extract titles from sections
@@ -24,7 +25,7 @@ export const extractSectionTitles = (children: React.ReactNode) => {
   });
 };
 
-// Create modified section component with proper vertical centering
+// Create modified section component with improved transitions and anti-flicker properties
 export const createModifiedSection = (
   child: React.ReactElement, 
   index: number, 
@@ -33,16 +34,19 @@ export const createModifiedSection = (
   sectionCount: number
 ) => {
   const isLastSection = index === sectionCount - 1;
+  const isActive = index === activeSection;
   
   return (
     <div
-      className="absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out flex items-center justify-center"
+      className="absolute inset-0 w-full h-full transition-transform duration-700 ease-out will-change-transform flex items-center justify-center"
       style={{
         transform: `translateY(${(index - activeSection) * 100}%)`,
-        zIndex: index === activeSection ? 10 : 0,
-        // Keep the last section visible when reaching end
-        opacity: 1,
-        pointerEvents: hasReachedEnd && !isLastSection ? 'none' : 'auto'
+        zIndex: isActive ? 10 : 0,
+        // Use opacity with transitions to prevent sudden appearance/disappearance
+        opacity: (Math.abs(index - activeSection) > 1 && !isActive) ? 0 : 1,
+        transition: "transform 700ms cubic-bezier(0.33, 1, 0.68, 1), opacity 400ms ease-out",
+        // Prevent interaction with hidden sections
+        pointerEvents: (isActive || (hasReachedEnd && isLastSection)) ? 'auto' : 'none',
       }}
     >
       {React.cloneElement(child, {

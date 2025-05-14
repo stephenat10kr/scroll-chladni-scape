@@ -14,6 +14,7 @@ export interface UseScrollJackResult {
   sectionTitles: React.ReactNode[];
   hasReachedEnd: boolean;
   isScrollJackActive: boolean;
+  isAnimating: boolean;
   setActiveSection: React.Dispatch<React.SetStateAction<number>>;
   setPreviousSection: React.Dispatch<React.SetStateAction<number | null>>;
   setAnimationDirection: React.Dispatch<React.SetStateAction<'up' | 'down'>>;

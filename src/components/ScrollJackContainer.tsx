@@ -14,6 +14,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     animationDirection,
     sectionCount,
     hasReachedEnd,
+    isAnimating,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
@@ -22,6 +23,9 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   } = useScrollJack(children, containerRef);
 
   const handleSectionChange = (index: number) => {
+    // Prevent navigation dot clicks during animations
+    if (isAnimating) return;
+    
     setPreviousSection(activeSection);
     setAnimationDirection(index > activeSection ? 'up' : 'down');
     setActiveSection(index);
@@ -41,9 +45,9 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   return (
     <div 
       ref={containerRef} 
-      className={`min-h-screen relative ${hasReachedEnd ? 'pointer-events-auto' : isScrollJackActive ? 'overflow-hidden' : ''}`}
+      className={`min-h-screen relative will-change-transform ${hasReachedEnd ? 'pointer-events-auto' : isScrollJackActive ? 'overflow-hidden' : ''}`}
     >
-      {/* Fixed title display component */}
+      {/* Fixed title display component - only show when activated */}
       {isScrollJackActive && (
         <ScrollJackTitle 
           titles={sectionTitles} 
@@ -53,7 +57,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
         />
       )}
       
-      {/* Render sections with proper vertical centering */}
+      {/* Render sections with proper vertical centering and smoother transitions */}
       <div className={`${isScrollJackActive ? 'absolute inset-0' : ''} ${hasReachedEnd ? 'pb-screen' : ''}`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
