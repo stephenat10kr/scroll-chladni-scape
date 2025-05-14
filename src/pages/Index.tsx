@@ -23,6 +23,7 @@ const Index = () => {
           {/* Section 1 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full mt-24">
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Section 1</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Discover innovative scroll animations</li>
                 <li>• Experience seamless section transitions</li>
@@ -34,6 +35,7 @@ const Index = () => {
           {/* Section 2 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full mt-24">
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Section 2</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Titles remain fixed while content scrolls</li>
                 <li>• Animated transitions between sections</li>
@@ -45,6 +47,7 @@ const Index = () => {
           {/* Section 3 */}
           <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
             <div className="text-center w-full mt-24">
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Section 3</h1>
               <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
                 <li>• Interactive navigation dots</li>
                 <li>• Responsive design for all devices</li>

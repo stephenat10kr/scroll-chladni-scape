@@ -46,6 +46,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     <div 
       ref={containerRef} 
       className={`min-h-screen relative will-change-transform ${hasReachedEnd ? 'pointer-events-auto' : isScrollJackActive ? 'overflow-hidden' : ''}`}
+      // Add debug info to help troubleshoot
+      data-scroll-jack-active={isScrollJackActive}
+      data-has-reached-end={hasReachedEnd}
+      data-active-section={activeSection}
     >
       {/* Fixed title display component - only show when activated */}
       {isScrollJackActive && (

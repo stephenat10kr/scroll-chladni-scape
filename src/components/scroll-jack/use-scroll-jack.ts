@@ -50,15 +50,13 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
         entries.forEach((entry) => {
           // Only change state when crossing threshold boundaries to prevent flicker
           if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
-            if (!isScrollJackActive) {
-              setIsScrollJackActive(true);
-              document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
-            }
+            setIsScrollJackActive(true);
+            document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+            console.log("ScrollJack activated, isScrollJackActive:", true);
           } else if (!entry.isIntersecting || entry.intersectionRatio < 0.1) {
-            if (isScrollJackActive) {
-              setIsScrollJackActive(false);
-              document.body.style.overflow = 'auto';
-            }
+            setIsScrollJackActive(false);
+            document.body.style.overflow = 'auto';
+            console.log("ScrollJack deactivated, isScrollJackActive:", false);
           }
         });
       },
@@ -75,7 +73,7 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
         observer.unobserve(containerRef.current);
       }
     };
-  }, [hasReachedEnd, isScrollJackActive]);
+  }, [hasReachedEnd]);
   
   useEffect(() => {
     // Track document scroll position to detect when to re-enter scroll-jack
@@ -100,8 +98,10 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
 
     // Improved wheel event handler with better debouncing
     const handleWheel = (e: WheelEvent) => {
-      // Only handle wheel events when scrolljack is active and not currently animating
-      if (!isScrollJackActive || isAnimating) return;
+      // Only handle wheel events when scrolljack is active
+      if (!isScrollJackActive) {
+        return; // Skip processing if not in scrolljack mode
+      }
       
       // Allow normal scrolling if we've reached the end
       if (hasReachedEnd) {
@@ -111,8 +111,8 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       // Prevent default in all other cases while in scrolljack mode
       e.preventDefault();
       
-      // Don't process scroll if already scrolling
-      if (isScrolling) return;
+      // Don't process scroll if already scrolling or animating
+      if (isScrolling || isAnimating) return;
       
       // Accumulate scroll value to reduce sensitivity
       scrollAccumulator.current += Math.abs(e.deltaY);
@@ -165,10 +165,8 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       }
     };
     
-    // Add the wheel event listener to the document when scrolljack is active
-    if (isScrollJackActive) {
-      document.addEventListener('wheel', handleWheel, { passive: false });
-    }
+    // Add the wheel event listener to the document with the proper passive option
+    document.addEventListener('wheel', handleWheel, { passive: false });
     
     // Add window scroll listener for detecting re-entry
     window.addEventListener('scroll', handleWindowScroll);
