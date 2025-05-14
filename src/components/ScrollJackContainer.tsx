@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useScrollJack } from './scroll-jack/use-scroll-jack';
 import { createModifiedSection } from './scroll-jack/utils';
 import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
@@ -26,17 +26,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     setPreviousSection(activeSection);
     setAnimationDirection(index > activeSection ? 'up' : 'down');
     setActiveSection(index);
-    setHasReachedEnd(index === sectionCount - 1);
-    setHasReachedTop(index === 0);
   };
 
-  // Reset scroll position when reaching end or beginning
-  useEffect(() => {
-    if (hasReachedEnd || hasReachedTop) {
-      window.scrollTo(0, 0);
-    }
-  }, [hasReachedEnd, hasReachedTop]);
-  
   // Use provided titles or default to section numbers
   const sectionTitles = titles || Array.from({ length: sectionCount }, (_, i) => `Section ${i + 1}`);
   

@@ -115,8 +115,17 @@ export const useScrollJack = (children: React.ReactNode) => {
             setHasReachedEnd(true);
             document.body.style.overflow = 'auto';
             
-            // Don't reset position, just allow continue scrolling
+            // Ensure we don't reset the position when transitioning to red section
             console.log("Reached end of scroll-jack sections, allowing downward scroll");
+            
+            // Dispatch an event to notify parent components
+            const container = containerRef.current;
+            if (container) {
+              const event = new CustomEvent('scroll-jack-complete', {
+                detail: { direction: 'down' }
+              });
+              container.dispatchEvent(event);
+            }
           }
         } else if (direction < 0) {
           // Scrolling up
@@ -135,6 +144,15 @@ export const useScrollJack = (children: React.ReactNode) => {
             setHasReachedTop(true);
             document.body.style.overflow = 'auto';
             console.log("Exiting scroll-jack to the top");
+            
+            // Dispatch an event to notify parent components
+            const container = containerRef.current;
+            if (container) {
+              const event = new CustomEvent('scroll-jack-complete', {
+                detail: { direction: 'up' }
+              });
+              container.dispatchEvent(event);
+            }
           }
         }
         

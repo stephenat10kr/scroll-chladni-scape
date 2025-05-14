@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import FullpageScrollJack from "@/components/FullpageScrollJack";
 import ScrollableBanner from "@/components/ScrollableBanner";
@@ -8,6 +9,7 @@ const Index = () => {
   const [scrollJackExitedTop, setScrollJackExitedTop] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   const redSectionRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef(0);
   
   // Define the content for each scrolljack section
   const sections = [
@@ -45,19 +47,34 @@ const Index = () => {
   // Define section titles
   const titles = ["Section 1", "Section 2", "Section 3"];
 
-  // Function to handle when all scrolljack sections are complete (scrolled to bottom)
+  // Save current scroll position when scrolljack becomes inactive
+  useEffect(() => {
+    if (!scrollJackActive) {
+      scrollPositionRef.current = window.scrollY;
+    }
+  }, [scrollJackActive]);
+
+  // Function to handle when all scrolljack sections are complete (scrolled to end)
   const handleScrollJackComplete = () => {
     console.log("Scrolljack complete! (Scrolled to end)");
     setScrollJackComplete(true);
     setScrollJackExitedTop(false);
     document.body.style.overflow = 'auto';
     
-    // After scrolljack is complete, scroll to the red section without resetting position
-    setTimeout(() => {
-      // Don't use scrollIntoView here as it can cause jumps
-      // Just ensure the red section is visible by leaving the scroll position alone
-      console.log("Allowing natural scrolling to red section");
-    }, 50);
+    // Preserve scroll position to ensure smooth transition to red section
+    const redSectionOffset = redSectionRef.current?.offsetTop || 0;
+    const placeholderHeight = sections.length * 120;
+    
+    // Calculate the scroll position where the red section should start
+    const targetScrollY = bannerRef.current?.offsetHeight || 0;
+    
+    // Set scroll position to show red section
+    window.scrollTo({
+      top: targetScrollY + placeholderHeight, 
+      behavior: 'auto'
+    });
+    
+    console.log("Positioned for smooth scrolling to red section");
   };
 
   // Function to handle when scrolljack exits from the top
@@ -67,16 +84,12 @@ const Index = () => {
     setScrollJackComplete(false);
     document.body.style.overflow = 'auto';
     
-    // Scroll back to banner
-    if (bannerRef.current) {
-      setTimeout(() => {
-        window.scrollTo({
-          top: 0,
-          behavior: 'auto'
-        });
-        console.log("Auto-scrolled to top banner");
-      }, 50);
-    }
+    // Set scroll position back to banner
+    window.scrollTo({
+      top: 0,
+      behavior: 'auto'
+    });
+    console.log("Auto-scrolled to top banner");
   };
 
   // Function to activate/reactivate scrolljack
@@ -116,10 +129,16 @@ const Index = () => {
       const redSectionRect = redSectionRef.current.getBoundingClientRect();
       const scrollY = window.scrollY;
       const windowHeight = window.innerHeight;
-      
-      // Calculate positions
       const bannerBottom = bannerRect.bottom;
       const redSectionTop = redSectionRect.top;
+      
+      // Calculate positions of key elements
+      const bannerHeight = bannerRect.height;
+      const placeholderHeight = sections.length * 120; // Match the placeholder height
+      const expectedRedSectionY = bannerHeight + placeholderHeight;
+      
+      // Save current scroll position
+      scrollPositionRef.current = scrollY;
       
       // If user has scrolled past banner but not yet into the red section, activate scrolljacking
       if (bannerBottom <= 0 && !scrollJackActive && !scrollJackComplete && !scrollJackExitedTop) {
@@ -134,7 +153,7 @@ const Index = () => {
       }
       
       // Check if user is scrolling up from the red section to re-enter scrolljack
-      if (scrollJackComplete && redSectionTop > windowHeight / 2) {
+      if (scrollJackComplete && redSectionTop > windowHeight / 3 && scrollY < expectedRedSectionY) {
         console.log("Re-entering scrolljack from below");
         activateScrollJack(true, false);
       }
@@ -156,7 +175,7 @@ const Index = () => {
       window.removeEventListener('scroll', checkScroll);
       document.body.style.overflow = 'auto';
     };
-  }, [scrollJackActive, scrollJackComplete, scrollJackExitedTop]);
+  }, [scrollJackActive, scrollJackComplete, scrollJackExitedTop, sections.length]);
 
   // Calculate height for placeholder div based on number of sections
   // Increased placeholder height to ensure there's enough scroll room

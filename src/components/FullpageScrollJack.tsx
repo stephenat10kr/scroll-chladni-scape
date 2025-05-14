@@ -33,7 +33,7 @@ const FullpageScrollJack: React.FC<FullpageScrollJackProps> = ({
   onExitTop
 }) => {
   const Content = () => {
-    const { hasReachedEnd, hasReachedTop } = useScrollJack(sections);
+    const { containerRef, hasReachedEnd, hasReachedTop } = useScrollJack(sections);
     
     useEffect(() => {
       if (hasReachedEnd && onComplete) {
@@ -46,6 +46,30 @@ const FullpageScrollJack: React.FC<FullpageScrollJackProps> = ({
         onExitTop();
       }
     }, [hasReachedTop, onExitTop]);
+    
+    useEffect(() => {
+      // Listen for the custom event from useScrollJack
+      const handleScrollJackComplete = (event: Event) => {
+        const customEvent = event as CustomEvent;
+        if (customEvent.detail && customEvent.detail.direction) {
+          if (customEvent.detail.direction === 'down' && onComplete) {
+            onComplete();
+          } else if (customEvent.detail.direction === 'up' && onExitTop) {
+            onExitTop();
+          }
+        }
+      };
+      
+      if (containerRef.current) {
+        containerRef.current.addEventListener('scroll-jack-complete', handleScrollJackComplete);
+      }
+      
+      return () => {
+        if (containerRef.current) {
+          containerRef.current.removeEventListener('scroll-jack-complete', handleScrollJackComplete);
+        }
+      };
+    }, [onComplete, onExitTop]);
     
     return (
       <div className="flex flex-col">
