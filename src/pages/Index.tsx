@@ -13,6 +13,13 @@ const Index = () => {
     console.log("Scrolljack complete!");
     setScrollJackComplete(true);
     document.body.style.overflow = 'auto';
+    
+    // Ensure we're at the top of the content after sections
+    // This helps ensure the red section is visible
+    window.scrollTo({
+      top: window.innerHeight,
+      behavior: 'auto'
+    });
   };
 
   // Function to reset when we need to reactivate scrolljack
@@ -85,6 +92,7 @@ const Index = () => {
   const sections = [
     // Section 1
     <div className="text-center w-full mt-24" key="section-1">
+      <h1 className="text-3xl font-bold mb-6 text-white">Section 1</h1>
       <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
         <li>• Discover innovative scroll animations</li>
         <li>• Experience seamless section transitions</li>
@@ -94,6 +102,7 @@ const Index = () => {
     
     // Section 2
     <div className="text-center w-full mt-24" key="section-2">
+      <h1 className="text-3xl font-bold mb-6 text-white">Section 2</h1>
       <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
         <li>• Titles remain fixed while content scrolls</li>
         <li>• Animated transitions between sections</li>
@@ -103,6 +112,7 @@ const Index = () => {
     
     // Section 3
     <div className="text-center w-full mt-24" key="section-3">
+      <h1 className="text-3xl font-bold mb-6 text-white">Section 3</h1>
       <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
         <li>• Interactive navigation dots</li>
         <li>• Responsive design for all devices</li>
@@ -110,9 +120,6 @@ const Index = () => {
       </ul>
     </div>
   ];
-
-  // Define section titles
-  const titles = ["Section 1", "Section 2", "Section 3"];
 
   // Define content that appears after scrolljacking
   const afterContent = (
@@ -170,7 +177,7 @@ const Index = () => {
       )}
       
       {/* After content appears when scrolljack is complete */}
-      {scrollJackComplete && afterContent}
+      {afterContent}
     </div>
   );
 };
