@@ -1,7 +1,6 @@
 
 import ChladniPattern from "@/components/ChladniPattern";
 import ScrollJackContainer from "@/components/ScrollJackContainer";
-import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
@@ -15,14 +14,6 @@ const Index = () => {
               This is normal content before the scroll-jacking begins.
               Continue scrolling to experience the effect.
             </p>
-            <div className="mt-8 flex gap-4 justify-center">
-              <Link to="/demo" className="px-6 py-3 bg-white text-blue-900 rounded-lg font-medium hover:bg-blue-100 transition-colors">
-                View Import Demo
-              </Link>
-              <Link to="/example" className="px-6 py-3 bg-white/20 text-white rounded-lg font-medium hover:bg-white/30 transition-colors">
-                View Background Example
-              </Link>
-            </div>
           </div>
         </div>
         
