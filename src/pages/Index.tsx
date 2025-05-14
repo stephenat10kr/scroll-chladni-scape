@@ -121,6 +121,9 @@ const Index = () => {
     </div>
   ];
 
+  // Define section titles - this was missing
+  const titles = ["Section 1", "Section 2", "Section 3"];
+
   // Define content that appears after scrolljacking
   const afterContent = (
     <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
