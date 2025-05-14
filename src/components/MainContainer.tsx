@@ -11,6 +11,26 @@ const MainContainer: React.FC<MainContainerProps> = ({ children }) => {
   return (
     <ChladniPattern>
       <div className="flex flex-col">
+        {/* Blue box component */}
+        <div className="bg-[#0EA5E9] min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Blue Box Content</h2>
+            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
+              This is a blue component with normal scrolling behavior that appears before the red box.
+            </p>
+          </div>
+        </div>
+        
+        {/* Red box content that becomes visible after scroll-jacking */}
+        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
+            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
+              This content appears after scrolling past all the scroll-jacked sections. Normal scrolling takes over here.
+            </p>
+          </div>
+        </div>
+        
         {/* First ScrollJackContainer */}
         <ScrollJackContainer
           titles={["Section 1", "Section 2", "Section 3"]}
@@ -48,16 +68,6 @@ const MainContainer: React.FC<MainContainerProps> = ({ children }) => {
             </div>
           </section>
         </ScrollJackContainer>
-        
-        {/* Red box content that becomes visible after scroll-jacking */}
-        <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
-            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
-              This content appears after scrolling past all the scroll-jacked sections. Normal scrolling takes over here.
-            </p>
-          </div>
-        </div>
         
         {children}
       </div>
