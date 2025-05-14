@@ -5,38 +5,63 @@ import ScrollableBanner from "@/components/ScrollableBanner";
 
 const Index = () => {
   const [scrollJackActive, setScrollJackActive] = useState(false);
-  const scrollJackRef = useRef<HTMLDivElement>(null);
+  const [scrollJackComplete, setScrollJackComplete] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   
-  // Listen for scroll events to determine when to activate scrolljacking
+  // Function to handle when all scrolljack sections are complete
+  const handleScrollJackComplete = () => {
+    console.log("Scrolljack complete!");
+    setScrollJackComplete(true);
+    document.body.style.overflow = 'auto';
+  };
+
+  // Monitor scroll position to activate/deactivate scroll-jacking
   useEffect(() => {
-    const handleScroll = () => {
-      if (bannerRef.current && scrollJackRef.current) {
+    const checkScroll = () => {
+      if (bannerRef.current) {
         const bannerBottom = bannerRef.current.getBoundingClientRect().bottom;
         
-        // If banner is scrolled past (its bottom edge is above viewport top), activate scrolljacking
-        if (bannerBottom <= 0 && !scrollJackActive) {
+        // If user has scrolled past banner, activate scrolljacking
+        if (bannerBottom <= 0 && !scrollJackActive && !scrollJackComplete) {
+          console.log("Activating scrolljack");
           setScrollJackActive(true);
-          document.body.style.overflow = 'hidden'; // Lock scrolling
+          document.body.style.overflow = 'hidden';
         } 
-        // If banner is visible again, deactivate scrolljacking
+        // If user has scrolled back to see the banner, deactivate scrolljacking
         else if (bannerBottom > 0 && scrollJackActive) {
+          console.log("Deactivating scrolljack - banner visible again");
           setScrollJackActive(false);
-          document.body.style.overflow = 'auto'; // Allow scrolling
+          document.body.style.overflow = 'auto';
         }
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [scrollJackActive]);
+    // Add scroll listener
+    window.addEventListener('scroll', checkScroll);
+    
+    // Initial check
+    checkScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', checkScroll);
+      document.body.style.overflow = 'auto';
+    };
+  }, [scrollJackActive, scrollJackComplete]);
 
-  // Return to normal scrolling when all scrolljack sections are completed
-  const handleScrollJackComplete = () => {
-    document.body.style.overflow = 'auto';
-  };
+  // Reset scrolljack when going back to top
+  useEffect(() => {
+    const handleScrollTop = () => {
+      if (window.scrollY === 0 && scrollJackComplete) {
+        console.log("Resetting scrolljack state");
+        setScrollJackComplete(false);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScrollTop);
+    return () => window.removeEventListener('scroll', handleScrollTop);
+  }, [scrollJackComplete]);
 
-  // Define the content for each section
+  // Define the content for each scrolljack section
   const sections = [
     // Section 1
     <div className="text-center w-full mt-24" key="section-1">
@@ -81,42 +106,48 @@ const Index = () => {
     </div>
   );
 
+  // Calculate height for placeholder div based on number of sections
+  const placeholderHeight = sections.length * 100;
+
   return (
-    <div>
+    <div className="relative">
       {/* Normal scrolling banner */}
       <div ref={bannerRef}>
-        <ScrollableBanner />
+        <ScrollableBanner height="100vh" />
       </div>
       
-      {/* ScrollJack sections that become active after scrolling past the banner */}
+      {/* ScrollJack sections that activate after scrolling past the banner */}
       <div 
-        ref={scrollJackRef} 
         style={{ 
-          visibility: scrollJackActive ? 'visible' : 'hidden',
           position: scrollJackActive ? 'fixed' : 'relative',
           top: 0,
           left: 0,
           width: '100%',
-          zIndex: 10
+          height: '100vh',
+          zIndex: 10,
+          visibility: scrollJackActive ? 'visible' : 'hidden',
+          pointerEvents: scrollJackActive ? 'auto' : 'none'
         }}
       >
         <FullpageScrollJack 
           sections={sections}
           titles={titles}
-          afterContent={afterContent}
           background="chladni"
+          onComplete={handleScrollJackComplete}
         />
       </div>
       
-      {/* Placeholder to maintain document height when scrolljack becomes fixed */}
-      {scrollJackActive && (
-        <div style={{ 
-          height: `${sections.length}00vh`, 
-          visibility: 'hidden' 
-        }} />
+      {/* Placeholder div to maintain scroll height */}
+      {(scrollJackActive || scrollJackComplete) && (
+        <div 
+          style={{ 
+            height: `${placeholderHeight}vh`, 
+            pointerEvents: 'none' 
+          }} 
+        />
       )}
       
-      {/* Display afterContent at the bottom when not in scrolljack mode */}
+      {/* After content appears when scrolljack is complete */}
       {!scrollJackActive && afterContent}
     </div>
   );

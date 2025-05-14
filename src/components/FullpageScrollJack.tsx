@@ -36,7 +36,7 @@ const FullpageScrollJack: React.FC<FullpageScrollJackProps> = ({
       if (hasReachedEnd && onComplete) {
         onComplete();
       }
-    }, [hasReachedEnd]);
+    }, [hasReachedEnd, onComplete]);
     
     return (
       <div className="flex flex-col">
