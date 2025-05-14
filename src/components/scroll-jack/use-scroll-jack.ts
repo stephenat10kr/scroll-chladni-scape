@@ -10,6 +10,7 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [isEnteringFromBottom, setIsEnteringFromBottom] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -30,6 +31,29 @@ export const useScrollJack = (children: React.ReactNode) => {
     return () => {
       if (transitionTimeoutRef.current) {
         clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Listen for custom events to control active section
+  useEffect(() => {
+    const handleSetActiveSection = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && customEvent.detail.section !== undefined) {
+        console.log("Setting active section via custom event:", customEvent.detail.section);
+        setActiveSection(customEvent.detail.section);
+        setIsEnteringFromBottom(true);
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('set-active-section', handleSetActiveSection);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('set-active-section', handleSetActiveSection);
       }
     };
   }, []);
@@ -82,10 +106,20 @@ export const useScrollJack = (children: React.ReactNode) => {
           }
         } else if (direction < 0) {
           // Scrolling up
-          if (activeSection > 0) {
+          if (activeSection > 0 || isEnteringFromBottom) {
             setAnimationDirection('down');
             setPreviousSection(activeSection);
-            setActiveSection(activeSection - 1);
+            
+            // If we're entering from the bottom and we're at the last section, 
+            // we don't want to decrement activeSection yet
+            if (!(isEnteringFromBottom && activeSection === sectionCount - 1)) {
+              setActiveSection(prevActiveSection => Math.max(0, prevActiveSection - 1));
+            }
+            setIsEnteringFromBottom(false);
+          } else if (activeSection === 0) {
+            // We're at the first section scrolling up, allow exiting to the top
+            document.body.style.overflow = 'auto';
+            console.log("Exiting scroll-jack to the top");
           }
         }
         
@@ -114,7 +148,7 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, isEnteringFromBottom]);
 
   // Set initial body style
   useEffect(() => {
@@ -136,5 +170,6 @@ export const useScrollJack = (children: React.ReactNode) => {
     setPreviousSection,
     setAnimationDirection,
     setHasReachedEnd,
+    isEnteringFromBottom
   };
 };

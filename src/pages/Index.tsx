@@ -14,10 +14,9 @@ const Index = () => {
     setScrollJackComplete(true);
     document.body.style.overflow = 'auto';
     
-    // Ensure we're at the top of the content after sections
-    // This helps ensure the red section is visible
+    // After scrolljack is complete, scroll to the red section
     window.scrollTo({
-      top: window.innerHeight,
+      top: window.innerHeight * (sections.length + 1),
       behavior: 'auto'
     });
   };
@@ -36,6 +35,7 @@ const Index = () => {
       if (bannerRef.current) {
         const bannerBottom = bannerRef.current.getBoundingClientRect().bottom;
         const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
         
         // If user has scrolled past banner, activate scrolljacking
         if (bannerBottom <= 0 && !scrollJackActive && !scrollJackComplete) {
@@ -50,14 +50,22 @@ const Index = () => {
           document.body.style.overflow = 'auto';
         }
         
-        // Check if user is scrolling up from the red section
+        // Check if user is scrolling up from the red section to re-enter scrolljack
         if (scrollJackComplete) {
-          const placeholderHeight = sections.length * 100;
-          const afterContentTop = window.innerHeight + (placeholderHeight * window.innerHeight / 100);
+          // Calculate the position where the red section begins
+          const redSectionTop = windowHeight * (sections.length + 1);
           
-          if (scrollY < afterContentTop - window.innerHeight/2) {
-            console.log("Scrolling back up into scrolljack area");
+          // If scrolled up from red section but still below the scrolljack area
+          if (scrollY < redSectionTop && scrollY > windowHeight) {
+            console.log("Re-entering scrolljack from below");
             reactivateScrollJack();
+            // Set the active section to the last one when coming from the bottom
+            const scrollJackContainer = document.querySelector('[data-scrolljack="true"]');
+            if (scrollJackContainer) {
+              // Dispatch a custom event to set the active section to the last one
+              const event = new CustomEvent('set-active-section', { detail: { section: sections.length - 1 } });
+              scrollJackContainer.dispatchEvent(event);
+            }
           }
         }
       }
@@ -121,7 +129,7 @@ const Index = () => {
     </div>
   ];
 
-  // Define section titles - this was missing
+  // Define section titles
   const titles = ["Section 1", "Section 2", "Section 3"];
 
   // Define content that appears after scrolljacking
@@ -158,6 +166,7 @@ const Index = () => {
           visibility: scrollJackActive ? 'visible' : 'hidden',
           pointerEvents: scrollJackActive ? 'auto' : 'none'
         }}
+        data-scrolljack="true"
       >
         {scrollJackActive && (
           <FullpageScrollJack 
