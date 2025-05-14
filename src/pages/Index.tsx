@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import FullpageScrollJack from "@/components/FullpageScrollJack";
 import ScrollableBanner from "@/components/ScrollableBanner";
@@ -53,13 +52,12 @@ const Index = () => {
     setScrollJackExitedTop(false);
     document.body.style.overflow = 'auto';
     
-    // After scrolljack is complete, scroll to the red section
-    if (redSectionRef.current) {
-      setTimeout(() => {
-        redSectionRef.current?.scrollIntoView({ behavior: 'auto' });
-        console.log("Auto-scrolled to red section");
-      }, 50);
-    }
+    // After scrolljack is complete, scroll to the red section without resetting position
+    setTimeout(() => {
+      // Don't use scrollIntoView here as it can cause jumps
+      // Just ensure the red section is visible by leaving the scroll position alone
+      console.log("Allowing natural scrolling to red section");
+    }, 50);
   };
 
   // Function to handle when scrolljack exits from the top
@@ -87,7 +85,11 @@ const Index = () => {
     setScrollJackActive(true);
     setScrollJackComplete(false);
     setScrollJackExitedTop(false);
-    document.body.style.overflow = 'hidden';
+    
+    // Keep the current scroll position if entering from below
+    if (!fromBelow) {
+      document.body.style.overflow = 'hidden';
+    }
     
     // If scrolljack is activated from below, set the active section to the last one
     const scrollJackContainer = document.querySelector('[data-scrolljack="true"]');
@@ -157,7 +159,8 @@ const Index = () => {
   }, [scrollJackActive, scrollJackComplete, scrollJackExitedTop]);
 
   // Calculate height for placeholder div based on number of sections
-  const placeholderHeight = sections.length * 100;
+  // Increased placeholder height to ensure there's enough scroll room
+  const placeholderHeight = sections.length * 120;
 
   return (
     <div className="relative">

@@ -115,7 +115,7 @@ export const useScrollJack = (children: React.ReactNode) => {
             setHasReachedEnd(true);
             document.body.style.overflow = 'auto';
             
-            // Ensure this state change is communicated to parent components
+            // Don't reset position, just allow continue scrolling
             console.log("Reached end of scroll-jack sections, allowing downward scroll");
           }
         } else if (direction < 0) {
