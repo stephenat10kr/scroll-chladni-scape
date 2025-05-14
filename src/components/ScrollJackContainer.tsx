@@ -45,14 +45,14 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   return (
     <div 
       ref={containerRef} 
-      className={`min-h-screen relative will-change-transform ${hasReachedEnd ? 'pointer-events-auto' : isScrollJackActive ? 'overflow-hidden' : ''}`}
-      // Add debug info to help troubleshoot
+      className={`min-h-screen relative ${hasReachedEnd ? 'pointer-events-auto' : isScrollJackActive ? 'overflow-hidden' : ''}`}
+      style={{ willChange: 'transform' }}
       data-scroll-jack-active={isScrollJackActive}
       data-has-reached-end={hasReachedEnd}
       data-active-section={activeSection}
     >
-      {/* Fixed title display component - only show when activated */}
-      {isScrollJackActive && (
+      {/* Fixed title display component */}
+      {isScrollJackActive && !hasReachedEnd && (
         <ScrollJackTitle 
           titles={sectionTitles} 
           activeSection={activeSection}
@@ -61,7 +61,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
         />
       )}
       
-      {/* Render sections with proper vertical centering and smoother transitions */}
+      {/* Render sections with proper vertical centering */}
       <div className={`${isScrollJackActive ? 'absolute inset-0' : ''} ${hasReachedEnd ? 'pb-screen' : ''}`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
@@ -73,8 +73,8 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
         })}
       </div>
       
-      {/* Navigation dots component - only show when scrolljack is active */}
-      {isScrollJackActive && (
+      {/* Navigation dots component */}
+      {isScrollJackActive && !hasReachedEnd && (
         <NavigationDots 
           sectionCount={sectionCount} 
           activeSection={activeSection}

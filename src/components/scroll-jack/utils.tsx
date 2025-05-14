@@ -14,7 +14,7 @@ export const extractSectionTitles = (children: React.ReactNode) => {
           const headingElements = React.Children.toArray(element.props.children);
           for (const headingElement of headingElements) {
             if (React.isValidElement(headingElement) && 
-                headingElement.type === 'h1') {
+                (headingElement.type === 'h1' || headingElement.type === 'h2')) {
               return headingElement.props.children;
             }
           }
@@ -25,7 +25,7 @@ export const extractSectionTitles = (children: React.ReactNode) => {
   });
 };
 
-// Create modified section component with improved transitions and anti-flicker properties
+// Create modified section component with improved transitions
 export const createModifiedSection = (
   child: React.ReactElement, 
   index: number, 
@@ -36,17 +36,19 @@ export const createModifiedSection = (
   const isLastSection = index === sectionCount - 1;
   const isActive = index === activeSection;
   
+  // Calculate distance from active section for more sophisticated transitions
+  const distance = Math.abs(index - activeSection);
+  
   return (
     <div
-      className="absolute inset-0 w-full h-full transition-transform duration-700 ease-out will-change-transform flex items-center justify-center"
+      className="absolute inset-0 w-full h-full flex items-center justify-center"
       style={{
         transform: `translateY(${(index - activeSection) * 100}%)`,
         zIndex: isActive ? 10 : 0,
-        // Use opacity with transitions to prevent sudden appearance/disappearance
-        opacity: (Math.abs(index - activeSection) > 1 && !isActive) ? 0 : 1,
-        transition: "transform 700ms cubic-bezier(0.33, 1, 0.68, 1), opacity 400ms ease-out",
-        // Prevent interaction with hidden sections
+        opacity: distance > 1 ? 0 : 1,
+        transition: "transform 600ms cubic-bezier(0.33, 1, 0.68, 1), opacity 400ms ease-out",
         pointerEvents: (isActive || (hasReachedEnd && isLastSection)) ? 'auto' : 'none',
+        willChange: "transform, opacity"
       }}
     >
       {React.cloneElement(child, {

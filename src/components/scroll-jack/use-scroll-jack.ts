@@ -11,8 +11,8 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [isScrollJackActive, setIsScrollJackActive] = useState(false);
   
-  // Add scroll sensitivity threshold and improve debouncing
-  const scrollThreshold = useRef(80); // Higher value = less sensitive (increased for smoother behavior)
+  // Lower threshold for better responsiveness
+  const scrollThreshold = useRef(30); 
   const scrollAccumulator = useRef(0);
   const transitionTimeoutRef = useRef<number | null>(null);
   
@@ -41,15 +41,15 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
     };
   }, []);
   
-  // Observer for intersection with viewport - improved thresholds for smoother activation
+  // Observer for intersection with viewport
   useEffect(() => {
     if (!containerRef.current) return;
     
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // Only change state when crossing threshold boundaries to prevent flicker
-          if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
+          // Simplified activation logic
+          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
             setIsScrollJackActive(true);
             document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
             console.log("ScrollJack activated, isScrollJackActive:", true);
@@ -61,8 +61,8 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
         });
       },
       {
-        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], // More granular thresholds
-        rootMargin: '-5% 0px -5% 0px', // Smaller margin for more precise activation
+        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5],
+        rootMargin: '0px'
       }
     );
     
@@ -96,32 +96,28 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
       }
     };
 
-    // Improved wheel event handler with better debouncing
+    // Simplified wheel event handler
     const handleWheel = (e: WheelEvent) => {
-      // Only handle wheel events when scrolljack is active
-      if (!isScrollJackActive) {
-        return; // Skip processing if not in scrolljack mode
+      // Skip if not active or already at the end
+      if (!isScrollJackActive || hasReachedEnd) {
+        return;
       }
       
-      // Allow normal scrolling if we've reached the end
-      if (hasReachedEnd) {
-        return; // Let the event propagate naturally
-      }
-      
-      // Prevent default in all other cases while in scrolljack mode
+      // Prevent default to stop normal scrolling
       e.preventDefault();
       
       // Don't process scroll if already scrolling or animating
       if (isScrolling || isAnimating) return;
       
-      // Accumulate scroll value to reduce sensitivity
+      // Accumulate scroll delta
       scrollAccumulator.current += Math.abs(e.deltaY);
       
-      // Log the scroll values for debugging
-      console.log("Scroll updated:", scrollAccumulator.current, "combined norm:", scrollAccumulator.current / scrollThreshold.current);
+      console.log("Scroll value:", e.deltaY, "accumulated:", scrollAccumulator.current, "threshold:", scrollThreshold.current);
       
-      // Only trigger scroll action if the accumulated value exceeds the threshold
       if (scrollAccumulator.current > scrollThreshold.current) {
+        // Reset accumulator immediately
+        scrollAccumulator.current = 0;
+        
         setIsScrolling(true);
         setIsAnimating(true);
         
@@ -150,22 +146,19 @@ export const useScrollJack = (children: React.ReactNode, containerRef: React.Ref
           }
         }
         
-        // Reset accumulator after action is triggered
-        scrollAccumulator.current = 0;
-        
-        // Add delay before allowing another scroll - increased for smoother transitions
+        // Add shorter delay for better responsiveness
         transitionTimeoutRef.current = window.setTimeout(() => {
           setIsScrolling(false);
-        }, 800);
+        }, 600);
         
         // Set a separate timeout for animation completion
         scrollingTimeoutRef.current = window.setTimeout(() => {
           setIsAnimating(false);
-        }, 900); // Slightly longer than transition time
+        }, 700);
       }
     };
     
-    // Add the wheel event listener to the document with the proper passive option
+    // Add the wheel event listener with the proper passive option
     document.addEventListener('wheel', handleWheel, { passive: false });
     
     // Add window scroll listener for detecting re-entry
