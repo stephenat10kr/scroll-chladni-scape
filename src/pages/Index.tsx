@@ -59,22 +59,21 @@ const Index = () => {
     console.log("Scrolljack complete! (Scrolled to end)");
     setScrollJackComplete(true);
     setScrollJackExitedTop(false);
+    setScrollJackActive(false);
     document.body.style.overflow = 'auto';
     
-    // Preserve scroll position to ensure smooth transition to red section
-    const redSectionOffset = redSectionRef.current?.offsetTop || 0;
-    const placeholderHeight = sections.length * 120;
-    
-    // Calculate the scroll position where the red section should start
-    const targetScrollY = bannerRef.current?.offsetHeight || 0;
-    
-    // Set scroll position to show red section
-    window.scrollTo({
-      top: targetScrollY + placeholderHeight, 
-      behavior: 'auto'
-    });
-    
-    console.log("Positioned for smooth scrolling to red section");
+    setTimeout(() => {
+      // Calculate the desired scroll position: banner height + placeholder height
+      const bannerHeight = bannerRef.current?.offsetHeight || 0;
+      const placeholderHeight = sections.length * window.innerHeight;
+      const targetScrollY = bannerHeight;
+      
+      // Set scroll position to red section
+      window.scrollTo({
+        top: targetScrollY + placeholderHeight - (window.innerHeight / 2),
+        behavior: 'auto'
+      });
+    }, 50);
   };
 
   // Function to handle when scrolljack exits from the top
@@ -82,14 +81,16 @@ const Index = () => {
     console.log("Scrolljack exited from top");
     setScrollJackExitedTop(true);
     setScrollJackComplete(false);
+    setScrollJackActive(false);
     document.body.style.overflow = 'auto';
     
-    // Set scroll position back to banner
-    window.scrollTo({
-      top: 0,
-      behavior: 'auto'
-    });
-    console.log("Auto-scrolled to top banner");
+    setTimeout(() => {
+      // Set scroll position back to top
+      window.scrollTo({
+        top: 0,
+        behavior: 'auto'
+      });
+    }, 50);
   };
 
   // Function to activate/reactivate scrolljack
@@ -99,10 +100,8 @@ const Index = () => {
     setScrollJackComplete(false);
     setScrollJackExitedTop(false);
     
-    // Keep the current scroll position if entering from below
-    if (!fromBelow) {
-      document.body.style.overflow = 'hidden';
-    }
+    // Hide overflow to prevent body scrolling during scrolljack
+    document.body.style.overflow = 'hidden';
     
     // If scrolljack is activated from below, set the active section to the last one
     const scrollJackContainer = document.querySelector('[data-scrolljack="true"]');
@@ -129,13 +128,12 @@ const Index = () => {
       const redSectionRect = redSectionRef.current.getBoundingClientRect();
       const scrollY = window.scrollY;
       const windowHeight = window.innerHeight;
-      const bannerBottom = bannerRect.bottom;
-      const redSectionTop = redSectionRect.top;
       
       // Calculate positions of key elements
       const bannerHeight = bannerRect.height;
-      const placeholderHeight = sections.length * 120; // Match the placeholder height
-      const expectedRedSectionY = bannerHeight + placeholderHeight;
+      const placeholderHeight = sections.length * windowHeight;
+      const bannerBottom = bannerRect.bottom;
+      const redSectionTop = redSectionRect.top;
       
       // Save current scroll position
       scrollPositionRef.current = scrollY;
@@ -153,7 +151,7 @@ const Index = () => {
       }
       
       // Check if user is scrolling up from the red section to re-enter scrolljack
-      if (scrollJackComplete && redSectionTop > windowHeight / 3 && scrollY < expectedRedSectionY) {
+      if (scrollJackComplete && redSectionTop >= 0 && redSectionTop < windowHeight) {
         console.log("Re-entering scrolljack from below");
         activateScrollJack(true, false);
       }
@@ -178,8 +176,7 @@ const Index = () => {
   }, [scrollJackActive, scrollJackComplete, scrollJackExitedTop, sections.length]);
 
   // Calculate height for placeholder div based on number of sections
-  // Increased placeholder height to ensure there's enough scroll room
-  const placeholderHeight = sections.length * 120;
+  const placeholderHeight = sections.length * 100; // Using viewport height units
 
   return (
     <div className="relative">
@@ -191,7 +188,7 @@ const Index = () => {
       {/* ScrollJack sections that activate after scrolling past the banner */}
       <div 
         style={{ 
-          position: scrollJackActive ? 'fixed' : 'relative',
+          position: scrollJackActive ? 'fixed' : 'absolute',
           top: 0,
           left: 0,
           width: '100%',
@@ -214,7 +211,7 @@ const Index = () => {
       </div>
       
       {/* Placeholder div to maintain scroll height */}
-      {(scrollJackActive || scrollJackComplete || scrollJackExitedTop) && (
+      {!scrollJackActive && (
         <div 
           style={{ 
             height: `${placeholderHeight}vh`, 
