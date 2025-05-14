@@ -129,12 +129,14 @@ const Index = () => {
           pointerEvents: scrollJackActive ? 'auto' : 'none'
         }}
       >
-        <FullpageScrollJack 
-          sections={sections}
-          titles={titles}
-          background="chladni"
-          onComplete={handleScrollJackComplete}
-        />
+        {scrollJackActive && (
+          <FullpageScrollJack 
+            sections={sections}
+            titles={titles}
+            background="chladni"
+            onComplete={handleScrollJackComplete}
+          />
+        )}
       </div>
       
       {/* Placeholder div to maintain scroll height */}
@@ -148,7 +150,7 @@ const Index = () => {
       )}
       
       {/* After content appears when scrolljack is complete */}
-      {!scrollJackActive && afterContent}
+      {scrollJackComplete && afterContent}
     </div>
   );
 };

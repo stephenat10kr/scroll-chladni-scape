@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import ChladniPattern from "@/components/ChladniPattern";
 import ScrollJackContainer from "@/components/ScrollJackContainer";
-import { useScrollJack } from "@/components/scroll-jack/use-scroll-jack";
+import { useScrollJack } from "./scroll-jack/use-scroll-jack";
 
 interface FullpageScrollJackProps {
   sections: React.ReactNode[];
