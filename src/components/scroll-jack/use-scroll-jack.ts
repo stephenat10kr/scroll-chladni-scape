@@ -10,7 +10,6 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
-  const [hasReachedStart, setHasReachedStart] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -53,34 +52,12 @@ export const useScrollJack = (children: React.ReactNode) => {
           document.body.style.overflow = 'hidden';
           window.scrollTo(0, 0);
         }
-      } else if (hasReachedStart) {
-        lastScrollY.current = window.scrollY;
-
-        // If user has scrolled to the bottom of the blue section and is continuing downward
-        const scrollHeight = Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight,
-          document.body.offsetHeight,
-          document.documentElement.offsetHeight
-        );
-        
-        if (window.innerHeight + window.scrollY >= scrollHeight - 10) {
-          // Re-enter the scroll-jack mode at the first section
-          setHasReachedStart(false);
-          setActiveSection(0);
-          setPreviousSection(null);
-          setAnimationDirection('up');
-          
-          // Reset body scroll position
-          document.body.style.overflow = 'hidden';
-          window.scrollTo(0, 0);
-        }
       }
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // Allow normal scrolling if we've reached the end or start
-      if (hasReachedEnd || hasReachedStart) {
+      // Allow normal scrolling if we've reached the end
+      if (hasReachedEnd) {
         return; // Let the event propagate naturally
       }
       
@@ -119,10 +96,6 @@ export const useScrollJack = (children: React.ReactNode) => {
             setAnimationDirection('down');
             setPreviousSection(activeSection);
             setActiveSection(activeSection - 1);
-          } else {
-            // We're at the first section and scrolling up, allow normal scrolling to blue section
-            setHasReachedStart(true);
-            document.body.style.overflow = 'auto';
           }
         }
         
@@ -151,15 +124,15 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, hasReachedStart]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
 
   // Set initial body style
   useEffect(() => {
-    document.body.style.overflow = hasReachedEnd || hasReachedStart ? 'auto' : 'hidden';
+    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [hasReachedEnd, hasReachedStart]);
+  }, [hasReachedEnd]);
 
   return {
     containerRef,
@@ -169,11 +142,9 @@ export const useScrollJack = (children: React.ReactNode) => {
     sectionCount,
     sectionTitles,
     hasReachedEnd,
-    hasReachedStart,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
     setHasReachedEnd,
-    setHasReachedStart
   };
 };
