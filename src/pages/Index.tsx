@@ -15,15 +15,24 @@ const Index = () => {
     document.body.style.overflow = 'auto';
   };
 
+  // Function to reset when we need to reactivate scrolljack
+  const reactivateScrollJack = () => {
+    console.log("Reactivating scrolljack");
+    setScrollJackComplete(false);
+    setScrollJackActive(true);
+    document.body.style.overflow = 'hidden';
+  };
+
   // Monitor scroll position to activate/deactivate scroll-jacking
   useEffect(() => {
     const checkScroll = () => {
       if (bannerRef.current) {
         const bannerBottom = bannerRef.current.getBoundingClientRect().bottom;
+        const scrollY = window.scrollY;
         
         // If user has scrolled past banner, activate scrolljacking
         if (bannerBottom <= 0 && !scrollJackActive && !scrollJackComplete) {
-          console.log("Activating scrolljack");
+          console.log("Activating scrolljack - scrolled past banner");
           setScrollJackActive(true);
           document.body.style.overflow = 'hidden';
         } 
@@ -32,6 +41,17 @@ const Index = () => {
           console.log("Deactivating scrolljack - banner visible again");
           setScrollJackActive(false);
           document.body.style.overflow = 'auto';
+        }
+        
+        // Check if user is scrolling up from the red section
+        if (scrollJackComplete) {
+          const placeholderHeight = sections.length * 100;
+          const afterContentTop = window.innerHeight + (placeholderHeight * window.innerHeight / 100);
+          
+          if (scrollY < afterContentTop - window.innerHeight/2) {
+            console.log("Scrolling back up into scrolljack area");
+            reactivateScrollJack();
+          }
         }
       }
     };

@@ -39,19 +39,6 @@ export const useScrollJack = (children: React.ReactNode) => {
     const handleWindowScroll = () => {
       if (hasReachedEnd) {
         lastScrollY.current = window.scrollY;
-        
-        // If user has scrolled back to the section height area and is continuing upward
-        if (lastScrollY.current < window.innerHeight * 0.5 && window.scrollY === 0) {
-          // Re-enter the scroll-jack mode at the last section
-          setHasReachedEnd(false);
-          setActiveSection(sectionCount - 1);
-          setPreviousSection(null);
-          setAnimationDirection('down');
-          
-          // Reset body scroll position
-          document.body.style.overflow = 'hidden';
-          window.scrollTo(0, 0);
-        }
       }
     };
 
