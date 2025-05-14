@@ -32,6 +32,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   // Reset scroll position when reaching end or beginning
   useEffect(() => {
     if (hasReachedEnd || hasReachedStart) {
+      console.log("Resetting scroll position, hasReachedEnd:", hasReachedEnd, "hasReachedStart:", hasReachedStart);
       window.scrollTo(0, 0);
     }
   }, [hasReachedEnd, hasReachedStart]);
@@ -39,12 +40,22 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   // Use provided titles or default to section numbers
   const sectionTitles = titles || Array.from({ length: sectionCount }, (_, i) => `Section ${i + 1}`);
   
+  // Debug log the component state
+  console.log("ScrollJackContainer rendering:", { 
+    activeSection, 
+    previousSection, 
+    hasReachedEnd, 
+    hasReachedStart, 
+    sectionCount 
+  });
+
   return (
     <div 
       ref={containerRef} 
-      className={`relative h-screen w-full overflow-hidden ${hasReachedEnd || hasReachedStart ? '' : 'fixed top-0 left-0'}`}
+      className={`relative min-h-screen w-full ${hasReachedEnd || hasReachedStart ? '' : 'fixed top-0 left-0'}`}
       style={{ 
-        zIndex: hasReachedEnd || hasReachedStart ? 'auto' : 10 
+        zIndex: hasReachedEnd || hasReachedStart ? 'auto' : 10,
+        overflow: 'visible' // Make sure content isn't being clipped
       }}
     >
       {/* Fixed title display component */}

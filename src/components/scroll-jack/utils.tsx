@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 // Extract titles from sections
@@ -34,14 +35,16 @@ export const createModifiedSection = (
 ) => {
   const isLastSection = index === sectionCount - 1;
   
+  // Debug log for visibility issues
+  console.log("Creating section:", index, "activeSection:", activeSection, "transform:", `translateY(${(index - activeSection) * 100}%)`, "opacity:", 1);
+  
   return (
     <div
       className="absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out flex items-center justify-center"
       style={{
         transform: `translateY(${(index - activeSection) * 100}%)`,
-        zIndex: index === activeSection ? 10 : 0,
-        // Keep the last section visible when reaching end
-        opacity: 1,
+        zIndex: index === activeSection ? 10 : 5,
+        opacity: 1, // Make sure opacity is 1 to be visible
         pointerEvents: hasReachedEnd && !isLastSection ? 'none' : 'auto'
       }}
     >
