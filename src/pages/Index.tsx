@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import FullpageScrollJack from "@/components/FullpageScrollJack";
 import ScrollableBanner from "@/components/ScrollableBanner";
@@ -62,18 +61,16 @@ const Index = () => {
     setScrollJackActive(false);
     document.body.style.overflow = 'auto';
     
+    // When scrolljack completes, immediately position to the start of the red section
     setTimeout(() => {
-      // Calculate the desired scroll position: banner height + placeholder height
-      const bannerHeight = bannerRef.current?.offsetHeight || 0;
-      const placeholderHeight = sections.length * window.innerHeight;
-      const targetScrollY = bannerHeight;
-      
-      // Set scroll position to red section
-      window.scrollTo({
-        top: targetScrollY + placeholderHeight - (window.innerHeight / 2),
-        behavior: 'auto'
-      });
-    }, 50);
+      if (redSectionRef.current) {
+        const rect = redSectionRef.current.getBoundingClientRect();
+        window.scrollTo({
+          top: window.scrollY + rect.top - 20, // Subtract a small offset for visual separation
+          behavior: 'auto'
+        });
+      }
+    }, 0);
   };
 
   // Function to handle when scrolljack exits from the top
@@ -90,7 +87,7 @@ const Index = () => {
         top: 0,
         behavior: 'auto'
       });
-    }, 50);
+    }, 0);
   };
 
   // Function to activate/reactivate scrolljack
@@ -130,8 +127,6 @@ const Index = () => {
       const windowHeight = window.innerHeight;
       
       // Calculate positions of key elements
-      const bannerHeight = bannerRect.height;
-      const placeholderHeight = sections.length * windowHeight;
       const bannerBottom = bannerRect.bottom;
       const redSectionTop = redSectionRect.top;
       
@@ -151,7 +146,7 @@ const Index = () => {
       }
       
       // Check if user is scrolling up from the red section to re-enter scrolljack
-      if (scrollJackComplete && redSectionTop >= 0 && redSectionTop < windowHeight) {
+      if (scrollJackComplete && redSectionTop >= windowHeight / 2) {
         console.log("Re-entering scrolljack from below");
         activateScrollJack(true, false);
       }
@@ -210,11 +205,11 @@ const Index = () => {
         )}
       </div>
       
-      {/* Placeholder div to maintain scroll height */}
+      {/* Placeholder div to maintain scroll height when scrolljack is not active */}
       {!scrollJackActive && (
         <div 
           style={{ 
-            height: `${placeholderHeight}vh`, 
+            height: scrollJackComplete ? '0px' : `${placeholderHeight}vh`, 
             pointerEvents: 'none' 
           }} 
         />

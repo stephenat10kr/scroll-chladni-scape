@@ -25,9 +25,6 @@ export const useScrollJack = (children: React.ReactNode) => {
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
   
-  // Track the last scroll position outside scroll sections
-  const lastScrollY = useRef(0);
-  
   // Handle cleanup of timeouts
   useEffect(() => {
     return () => {
@@ -73,13 +70,6 @@ export const useScrollJack = (children: React.ReactNode) => {
   }, []);
   
   useEffect(() => {
-    // Track document scroll position to detect when to re-enter scroll-jack
-    const handleWindowScroll = () => {
-      if (hasReachedEnd || hasReachedTop) {
-        lastScrollY.current = window.scrollY;
-      }
-    };
-
     const handleWheel = (e: WheelEvent) => {
       // Allow normal scrolling if we've reached the end or top
       if (hasReachedEnd || hasReachedTop) {
@@ -111,7 +101,7 @@ export const useScrollJack = (children: React.ReactNode) => {
             // Move to next section
             setActiveSection(activeSection + 1);
           } else {
-            // We're at the last section, allow normal scrolling
+            // We're at the last section, signal that we've reached the end
             setHasReachedEnd(true);
             
             // Dispatch an event to notify parent components that we've reached the end
@@ -172,14 +162,10 @@ export const useScrollJack = (children: React.ReactNode) => {
       container.addEventListener('wheel', handleWheel, { passive: false });
     }
     
-    // Add window scroll listener for detecting re-entry
-    window.addEventListener('scroll', handleWindowScroll);
-    
     return () => {
       if (container) {
         container.removeEventListener('wheel', handleWheel);
       }
-      window.removeEventListener('scroll', handleWindowScroll);
     };
   }, [activeSection, isScrolling, sectionCount, hasReachedEnd, hasReachedTop, isEnteringFromBottom, isEnteringFromTop]);
 
