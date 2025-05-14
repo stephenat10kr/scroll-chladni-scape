@@ -9,7 +9,8 @@ interface FullpageScrollJackProps {
   titles: string[];
   afterContent?: React.ReactNode;
   background?: 'chladni' | 'none';
-  onComplete?: () => void; // Add callback for when scrolljacking is complete
+  onComplete?: () => void; // Callback for when scrolljacking is complete (reached end)
+  onExitTop?: () => void;  // Callback for when scrolljacking exits from the top
 }
 
 /**
@@ -21,22 +22,30 @@ interface FullpageScrollJackProps {
  * @param afterContent - Optional content to display after all scrolljacked sections
  * @param background - Optional background type ('chladni' or 'none'), defaults to 'chladni'
  * @param onComplete - Optional callback for when scrolljacking is complete
+ * @param onExitTop - Optional callback for when scrolljacking exits from the top
  */
 const FullpageScrollJack: React.FC<FullpageScrollJackProps> = ({ 
   sections, 
   titles, 
   afterContent,
   background = 'chladni',
-  onComplete
+  onComplete,
+  onExitTop
 }) => {
   const Content = () => {
-    const { hasReachedEnd } = useScrollJack(sections);
+    const { hasReachedEnd, hasReachedTop } = useScrollJack(sections);
     
     useEffect(() => {
       if (hasReachedEnd && onComplete) {
         onComplete();
       }
     }, [hasReachedEnd, onComplete]);
+    
+    useEffect(() => {
+      if (hasReachedTop && onExitTop) {
+        onExitTop();
+      }
+    }, [hasReachedTop, onExitTop]);
     
     return (
       <div className="flex flex-col">

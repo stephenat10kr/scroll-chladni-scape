@@ -6,96 +6,10 @@ import ScrollableBanner from "@/components/ScrollableBanner";
 const Index = () => {
   const [scrollJackActive, setScrollJackActive] = useState(false);
   const [scrollJackComplete, setScrollJackComplete] = useState(false);
+  const [scrollJackExitedTop, setScrollJackExitedTop] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
+  const redSectionRef = useRef<HTMLDivElement>(null);
   
-  // Function to handle when all scrolljack sections are complete
-  const handleScrollJackComplete = () => {
-    console.log("Scrolljack complete!");
-    setScrollJackComplete(true);
-    document.body.style.overflow = 'auto';
-    
-    // After scrolljack is complete, scroll to the red section
-    window.scrollTo({
-      top: window.innerHeight * (sections.length + 1),
-      behavior: 'auto'
-    });
-  };
-
-  // Function to reset when we need to reactivate scrolljack
-  const reactivateScrollJack = () => {
-    console.log("Reactivating scrolljack");
-    setScrollJackComplete(false);
-    setScrollJackActive(true);
-    document.body.style.overflow = 'hidden';
-  };
-
-  // Monitor scroll position to activate/deactivate scroll-jacking
-  useEffect(() => {
-    const checkScroll = () => {
-      if (bannerRef.current) {
-        const bannerBottom = bannerRef.current.getBoundingClientRect().bottom;
-        const scrollY = window.scrollY;
-        const windowHeight = window.innerHeight;
-        
-        // If user has scrolled past banner, activate scrolljacking
-        if (bannerBottom <= 0 && !scrollJackActive && !scrollJackComplete) {
-          console.log("Activating scrolljack - scrolled past banner");
-          setScrollJackActive(true);
-          document.body.style.overflow = 'hidden';
-        } 
-        // If user has scrolled back to see the banner, deactivate scrolljacking
-        else if (bannerBottom > 0 && scrollJackActive) {
-          console.log("Deactivating scrolljack - banner visible again");
-          setScrollJackActive(false);
-          document.body.style.overflow = 'auto';
-        }
-        
-        // Check if user is scrolling up from the red section to re-enter scrolljack
-        if (scrollJackComplete) {
-          // Calculate the position where the red section begins
-          const redSectionTop = windowHeight * (sections.length + 1);
-          
-          // If scrolled up from red section but still below the scrolljack area
-          if (scrollY < redSectionTop && scrollY > windowHeight) {
-            console.log("Re-entering scrolljack from below");
-            reactivateScrollJack();
-            // Set the active section to the last one when coming from the bottom
-            const scrollJackContainer = document.querySelector('[data-scrolljack="true"]');
-            if (scrollJackContainer) {
-              // Dispatch a custom event to set the active section to the last one
-              const event = new CustomEvent('set-active-section', { detail: { section: sections.length - 1 } });
-              scrollJackContainer.dispatchEvent(event);
-            }
-          }
-        }
-      }
-    };
-
-    // Add scroll listener
-    window.addEventListener('scroll', checkScroll);
-    
-    // Initial check
-    checkScroll();
-    
-    return () => {
-      window.removeEventListener('scroll', checkScroll);
-      document.body.style.overflow = 'auto';
-    };
-  }, [scrollJackActive, scrollJackComplete]);
-
-  // Reset scrolljack when going back to top
-  useEffect(() => {
-    const handleScrollTop = () => {
-      if (window.scrollY === 0 && scrollJackComplete) {
-        console.log("Resetting scrolljack state");
-        setScrollJackComplete(false);
-      }
-    };
-    
-    window.addEventListener('scroll', handleScrollTop);
-    return () => window.removeEventListener('scroll', handleScrollTop);
-  }, [scrollJackComplete]);
-
   // Define the content for each scrolljack section
   const sections = [
     // Section 1
@@ -132,17 +46,115 @@ const Index = () => {
   // Define section titles
   const titles = ["Section 1", "Section 2", "Section 3"];
 
-  // Define content that appears after scrolljacking
-  const afterContent = (
-    <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
-        <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
-          This content appears after scrolling past all the scroll-jacked sections. Normal scrolling takes over here.
-        </p>
-      </div>
-    </div>
-  );
+  // Function to handle when all scrolljack sections are complete (scrolled to bottom)
+  const handleScrollJackComplete = () => {
+    console.log("Scrolljack complete! (Scrolled to end)");
+    setScrollJackComplete(true);
+    setScrollJackExitedTop(false);
+    document.body.style.overflow = 'auto';
+    
+    // After scrolljack is complete, scroll to the red section
+    if (redSectionRef.current) {
+      setTimeout(() => {
+        redSectionRef.current?.scrollIntoView({ behavior: 'auto' });
+        console.log("Auto-scrolled to red section");
+      }, 50);
+    }
+  };
+
+  // Function to handle when scrolljack exits from the top
+  const handleScrollJackExitTop = () => {
+    console.log("Scrolljack exited from top");
+    setScrollJackExitedTop(true);
+    setScrollJackComplete(false);
+    document.body.style.overflow = 'auto';
+    
+    // Scroll back to banner
+    if (bannerRef.current) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'auto'
+        });
+        console.log("Auto-scrolled to top banner");
+      }, 50);
+    }
+  };
+
+  // Function to activate/reactivate scrolljack
+  const activateScrollJack = (fromBelow = false, fromAbove = false) => {
+    console.log(`Activating scrolljack${fromBelow ? ' from below' : ''}${fromAbove ? ' from above' : ''}`);
+    setScrollJackActive(true);
+    setScrollJackComplete(false);
+    setScrollJackExitedTop(false);
+    document.body.style.overflow = 'hidden';
+    
+    // If scrolljack is activated from below, set the active section to the last one
+    const scrollJackContainer = document.querySelector('[data-scrolljack="true"]');
+    if (scrollJackContainer && (fromBelow || fromAbove)) {
+      // Dispatch a custom event to set the active section
+      const sectionIndex = fromBelow ? sections.length - 1 : 0;
+      const event = new CustomEvent('set-active-section', { 
+        detail: { 
+          section: sectionIndex,
+          fromBelow: fromBelow,
+          fromAbove: fromAbove
+        } 
+      });
+      scrollJackContainer.dispatchEvent(event);
+    }
+  };
+
+  // Monitor scroll position to activate/deactivate scroll-jacking
+  useEffect(() => {
+    const checkScroll = () => {
+      if (!bannerRef.current || !redSectionRef.current) return;
+      
+      const bannerRect = bannerRef.current.getBoundingClientRect();
+      const redSectionRect = redSectionRef.current.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      // Calculate positions
+      const bannerBottom = bannerRect.bottom;
+      const redSectionTop = redSectionRect.top;
+      
+      // If user has scrolled past banner but not yet into the red section, activate scrolljacking
+      if (bannerBottom <= 0 && !scrollJackActive && !scrollJackComplete && !scrollJackExitedTop) {
+        console.log("Activating scrolljack - scrolled past banner");
+        activateScrollJack(false, true);
+      } 
+      // If user has scrolled back to see the banner while in scrolljack mode
+      else if (bannerBottom > 0 && scrollJackActive) {
+        console.log("Deactivating scrolljack - banner visible again");
+        setScrollJackActive(false);
+        document.body.style.overflow = 'auto';
+      }
+      
+      // Check if user is scrolling up from the red section to re-enter scrolljack
+      if (scrollJackComplete && redSectionTop > windowHeight / 2) {
+        console.log("Re-entering scrolljack from below");
+        activateScrollJack(true, false);
+      }
+      
+      // Check if user is scrolling down from banner area to re-enter scrolljack after exiting top
+      if (scrollJackExitedTop && bannerBottom < -windowHeight / 4) {
+        console.log("Re-entering scrolljack from above");
+        activateScrollJack(false, true);
+      }
+    };
+
+    // Add scroll listener
+    window.addEventListener('scroll', checkScroll);
+    
+    // Initial check
+    checkScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', checkScroll);
+      document.body.style.overflow = 'auto';
+    };
+  }, [scrollJackActive, scrollJackComplete, scrollJackExitedTop]);
 
   // Calculate height for placeholder div based on number of sections
   const placeholderHeight = sections.length * 100;
@@ -174,12 +186,13 @@ const Index = () => {
             titles={titles}
             background="chladni"
             onComplete={handleScrollJackComplete}
+            onExitTop={handleScrollJackExitTop}
           />
         )}
       </div>
       
       {/* Placeholder div to maintain scroll height */}
-      {(scrollJackActive || scrollJackComplete) && (
+      {(scrollJackActive || scrollJackComplete || scrollJackExitedTop) && (
         <div 
           style={{ 
             height: `${placeholderHeight}vh`, 
@@ -189,7 +202,17 @@ const Index = () => {
       )}
       
       {/* After content appears when scrolljack is complete */}
-      {afterContent}
+      <div 
+        ref={redSectionRef} 
+        className="bg-[#ea384c] min-h-screen flex items-center justify-center"
+      >
+        <div className="text-center">
+          <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
+          <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
+            This content appears after scrolling past all the scroll-jacked sections. Normal scrolling takes over here.
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
