@@ -42,7 +42,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   return (
     <div 
       ref={containerRef} 
-      className={`h-screen overflow-hidden relative ${hasReachedEnd || hasReachedStart ? 'static' : ''}`}
+      className={`relative h-screen w-full overflow-hidden ${hasReachedEnd || hasReachedStart ? '' : 'fixed top-0 left-0'}`}
+      style={{ 
+        zIndex: hasReachedEnd || hasReachedStart ? 'auto' : 10 
+      }}
     >
       {/* Fixed title display component */}
       <ScrollJackTitle 
@@ -53,7 +56,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
       />
       
       {/* Render sections with proper vertical centering */}
-      <div className={`absolute inset-0 ${hasReachedEnd || hasReachedStart ? 'pb-screen' : ''}`}>
+      <div className="w-full h-full">
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
             return createModifiedSection(child, index, activeSection, hasReachedEnd || hasReachedStart, sectionCount);
