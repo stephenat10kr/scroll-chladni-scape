@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import ChladniPattern from "@/components/ChladniPattern";
 import ScrollJackContainer from "@/components/ScrollJackContainer";
+import { useScrollJack } from "@/components/scroll-jack/use-scroll-jack";
 
 interface FullpageScrollJackProps {
   sections: React.ReactNode[];
@@ -49,7 +50,7 @@ const FullpageScrollJack: React.FC<FullpageScrollJackProps> = ({
               {section}
             </section>
           ))}
-        </ScrollJackContainer>
+        </ScrollJackContainer}
         
         {/* Content after scroll-jacking */}
         {afterContent && (
