@@ -50,7 +50,7 @@ const FullpageScrollJack: React.FC<FullpageScrollJackProps> = ({
               {section}
             </section>
           ))}
-        </ScrollJackContainer}
+        </ScrollJackContainer>
         
         {/* Content after scroll-jacking */}
         {afterContent && (
