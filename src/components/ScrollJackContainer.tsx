@@ -14,10 +14,12 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     animationDirection,
     sectionCount,
     hasReachedEnd,
+    hasReachedStart,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
-    setHasReachedEnd
+    setHasReachedEnd,
+    setHasReachedStart
   } = useScrollJack(children);
 
   const handleSectionChange = (index: number) => {
@@ -29,10 +31,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
 
   // Reset scroll position when reaching end or beginning
   useEffect(() => {
-    if (hasReachedEnd) {
+    if (hasReachedEnd || hasReachedStart) {
       window.scrollTo(0, 0);
     }
-  }, [hasReachedEnd]);
+  }, [hasReachedEnd, hasReachedStart]);
   
   // Use provided titles or default to section numbers
   const sectionTitles = titles || Array.from({ length: sectionCount }, (_, i) => `Section ${i + 1}`);
@@ -40,7 +42,7 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   return (
     <div 
       ref={containerRef} 
-      className={`h-screen overflow-hidden relative ${hasReachedEnd ? 'static' : ''}`}
+      className={`h-screen overflow-hidden relative ${hasReachedEnd || hasReachedStart ? 'static' : ''}`}
     >
       {/* Fixed title display component */}
       <ScrollJackTitle 
@@ -51,10 +53,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
       />
       
       {/* Render sections with proper vertical centering */}
-      <div className={`absolute inset-0 ${hasReachedEnd ? 'pb-screen' : ''}`}>
+      <div className={`absolute inset-0 ${hasReachedEnd || hasReachedStart ? 'pb-screen' : ''}`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
-            return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);
+            return createModifiedSection(child, index, activeSection, hasReachedEnd || hasReachedStart, sectionCount);
           }
           return child;
         })}
