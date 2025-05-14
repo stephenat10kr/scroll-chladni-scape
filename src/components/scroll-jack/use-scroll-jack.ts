@@ -10,9 +10,6 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
-  const [hasReachedTop, setHasReachedTop] = useState(false);
-  const [isEnteringFromBottom, setIsEnteringFromBottom] = useState(false);
-  const [isEnteringFromTop, setIsEnteringFromTop] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -25,6 +22,9 @@ export const useScrollJack = (children: React.ReactNode) => {
   // Extract titles from each section for the fixed title
   const sectionTitles = extractSectionTitles(children);
   
+  // Track the last scroll position outside scroll sections
+  const lastScrollY = useRef(0);
+  
   // Handle cleanup of timeouts
   useEffect(() => {
     return () => {
@@ -33,46 +33,31 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
     };
   }, []);
-
-  // Listen for custom events to control active section
-  useEffect(() => {
-    const handleSetActiveSection = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      if (customEvent.detail && customEvent.detail.section !== undefined) {
-        console.log("Setting active section via custom event:", customEvent.detail.section);
-        setActiveSection(customEvent.detail.section);
-        
-        // Set entering direction based on where we're coming from
-        if (customEvent.detail.fromBelow) {
-          setIsEnteringFromBottom(true);
-          setIsEnteringFromTop(false);
-        } else if (customEvent.detail.fromAbove) {
-          setIsEnteringFromTop(true);
-          setIsEnteringFromBottom(false);
-        }
-        
-        // Reset reached states when re-entering
-        setHasReachedEnd(false);
-        setHasReachedTop(false);
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('set-active-section', handleSetActiveSection);
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener('set-active-section', handleSetActiveSection);
-      }
-    };
-  }, []);
   
   useEffect(() => {
+    // Track document scroll position to detect when to re-enter scroll-jack
+    const handleWindowScroll = () => {
+      if (hasReachedEnd) {
+        lastScrollY.current = window.scrollY;
+        
+        // If user has scrolled back to the section height area and is continuing upward
+        if (lastScrollY.current < window.innerHeight * 0.5 && window.scrollY === 0) {
+          // Re-enter the scroll-jack mode at the last section
+          setHasReachedEnd(false);
+          setActiveSection(sectionCount - 1);
+          setPreviousSection(null);
+          setAnimationDirection('down');
+          
+          // Reset body scroll position
+          document.body.style.overflow = 'hidden';
+          window.scrollTo(0, 0);
+        }
+      }
+    };
+
     const handleWheel = (e: WheelEvent) => {
-      // Allow normal scrolling if we've reached the end or top
-      if (hasReachedEnd || hasReachedTop) {
+      // Allow normal scrolling if we've reached the end
+      if (hasReachedEnd) {
         return; // Let the event propagate naturally
       }
       
@@ -101,49 +86,17 @@ export const useScrollJack = (children: React.ReactNode) => {
             // Move to next section
             setActiveSection(activeSection + 1);
           } else {
-            // We're at the last section, signal that we've reached the end
+            // We're at the last section, allow normal scrolling
             setHasReachedEnd(true);
-            
-            // Dispatch an event to notify parent components that we've reached the end
-            const container = containerRef.current;
-            if (container) {
-              const event = new CustomEvent('scroll-jack-complete', {
-                detail: { direction: 'down' }
-              });
-              container.dispatchEvent(event);
-            }
+            document.body.style.overflow = 'auto';
           }
         } else if (direction < 0) {
           // Scrolling up
-          if (activeSection > 0 || isEnteringFromBottom) {
+          if (activeSection > 0) {
             setAnimationDirection('down');
             setPreviousSection(activeSection);
-            
-            // If we're entering from the bottom and we're at the last section, 
-            // we don't want to decrement activeSection yet
-            if (!(isEnteringFromBottom && activeSection === sectionCount - 1)) {
-              setActiveSection(prevActiveSection => Math.max(0, prevActiveSection - 1));
-            }
-            setIsEnteringFromBottom(false);
-          } else if (activeSection === 0) {
-            // We're at the first section scrolling up, exit to the top
-            setHasReachedTop(true);
-            
-            // Dispatch an event to notify parent components
-            const container = containerRef.current;
-            if (container) {
-              const event = new CustomEvent('scroll-jack-complete', {
-                detail: { direction: 'up' }
-              });
-              container.dispatchEvent(event);
-            }
+            setActiveSection(activeSection - 1);
           }
-        }
-        
-        // Reset entering states after using them
-        if (!isEnteringFromBottom && !isEnteringFromTop) {
-          setIsEnteringFromTop(false);
-          setIsEnteringFromBottom(false);
         }
         
         // Reset accumulator after action is triggered
@@ -162,12 +115,24 @@ export const useScrollJack = (children: React.ReactNode) => {
       container.addEventListener('wheel', handleWheel, { passive: false });
     }
     
+    // Add window scroll listener for detecting re-entry
+    window.addEventListener('scroll', handleWindowScroll);
+    
     return () => {
       if (container) {
         container.removeEventListener('wheel', handleWheel);
       }
+      window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, hasReachedTop, isEnteringFromBottom, isEnteringFromTop]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+
+  // Set initial body style
+  useEffect(() => {
+    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [hasReachedEnd]);
 
   return {
     containerRef,
@@ -177,13 +142,9 @@ export const useScrollJack = (children: React.ReactNode) => {
     sectionCount,
     sectionTitles,
     hasReachedEnd,
-    hasReachedTop,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
     setHasReachedEnd,
-    setHasReachedTop,
-    isEnteringFromBottom,
-    isEnteringFromTop
   };
 };

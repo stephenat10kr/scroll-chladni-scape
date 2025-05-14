@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useScrollJack } from './scroll-jack/use-scroll-jack';
 import { createModifiedSection } from './scroll-jack/utils';
 import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
@@ -14,27 +14,33 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     animationDirection,
     sectionCount,
     hasReachedEnd,
-    hasReachedTop,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
-    setHasReachedEnd,
-    setHasReachedTop
+    setHasReachedEnd
   } = useScrollJack(children);
 
   const handleSectionChange = (index: number) => {
     setPreviousSection(activeSection);
     setAnimationDirection(index > activeSection ? 'up' : 'down');
     setActiveSection(index);
+    setHasReachedEnd(index === sectionCount - 1);
   };
 
+  // Reset scroll position when reaching end or beginning
+  useEffect(() => {
+    if (hasReachedEnd) {
+      window.scrollTo(0, 0);
+    }
+  }, [hasReachedEnd]);
+  
   // Use provided titles or default to section numbers
   const sectionTitles = titles || Array.from({ length: sectionCount }, (_, i) => `Section ${i + 1}`);
   
   return (
     <div 
       ref={containerRef} 
-      className={`h-screen overflow-hidden relative ${hasReachedEnd || hasReachedTop ? 'static' : ''}`}
+      className={`h-screen overflow-hidden relative ${hasReachedEnd ? 'static' : ''}`}
     >
       {/* Fixed title display component */}
       <ScrollJackTitle 
@@ -45,10 +51,10 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
       />
       
       {/* Render sections with proper vertical centering */}
-      <div className={`absolute inset-0 ${hasReachedEnd || hasReachedTop ? 'pb-screen' : ''}`}>
+      <div className={`absolute inset-0 ${hasReachedEnd ? 'pb-screen' : ''}`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement(child)) {
-            return createModifiedSection(child, index, activeSection, hasReachedEnd || hasReachedTop, sectionCount);
+            return createModifiedSection(child, index, activeSection, hasReachedEnd, sectionCount);
           }
           return child;
         })}
