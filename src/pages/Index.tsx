@@ -9,8 +9,8 @@ const Index = () => {
       <ChladniPattern>
         <div className="flex flex-col">
           {/* Blue section that scrolls normally - 200vh height */}
-          <div className="bg-[#0EA5E9] min-h-[200vh] w-full flex items-center justify-center">
-            <div className="text-center">
+          <div className="bg-[#0EA5E9] min-h-[200vh] w-full relative" style={{ zIndex: 10 }}>
+            <div className="sticky top-[40vh] text-center">
               <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Blue Section</h2>
               <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
                 This section scrolls normally. Scroll down to reach the scroll-jacking area with the Chladni pattern background.
