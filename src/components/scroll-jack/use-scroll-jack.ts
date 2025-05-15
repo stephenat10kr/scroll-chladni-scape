@@ -10,6 +10,7 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [shouldEnableScrollJack, setShouldEnableScrollJack] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -56,6 +57,11 @@ export const useScrollJack = (children: React.ReactNode) => {
     };
 
     const handleWheel = (e: WheelEvent) => {
+      // Skip scroll-jacking if it's not enabled yet
+      if (!shouldEnableScrollJack) {
+        return;
+      }
+      
       // Allow normal scrolling if we've reached the end
       if (hasReachedEnd) {
         return; // Let the event propagate naturally
@@ -124,15 +130,20 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, shouldEnableScrollJack]);
 
-  // Set initial body style
+  // Set body style only when scroll-jacking is enabled
   useEffect(() => {
-    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+    if (shouldEnableScrollJack && !hasReachedEnd) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [hasReachedEnd]);
+  }, [hasReachedEnd, shouldEnableScrollJack]);
 
   return {
     containerRef,
@@ -142,9 +153,11 @@ export const useScrollJack = (children: React.ReactNode) => {
     sectionCount,
     sectionTitles,
     hasReachedEnd,
+    shouldEnableScrollJack,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
     setHasReachedEnd,
+    setShouldEnableScrollJack,
   };
 };
