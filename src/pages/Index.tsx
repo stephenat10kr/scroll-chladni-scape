@@ -4,9 +4,9 @@ import ScrollJackContainer from "@/components/ScrollJackContainer";
 
 const Index = () => {
   return (
-    <div className="flex flex-col relative">
+    <div className="relative">
       {/* Blue section that scrolls normally - 200vh height */}
-      <div className="bg-[#0EA5E9] min-h-[200vh] flex items-center justify-center relative z-10">
+      <div className="bg-[#0EA5E9] min-h-[200vh] w-full flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Blue Section</h2>
           <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
@@ -16,7 +16,7 @@ const Index = () => {
       </div>
       
       {/* Chladni pattern with scroll-jacking */}
-      <div className="relative z-20">
+      <div className="relative">
         <ChladniPattern>
           <div className="flex flex-col">
             {/* First ScrollJackContainer */}
@@ -58,7 +58,7 @@ const Index = () => {
             </ScrollJackContainer>
             
             {/* Red box content that becomes visible after scroll-jacking */}
-            <div className="bg-[#ea384c] min-h-screen flex items-center justify-center relative z-10">
+            <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
               <div className="text-center">
                 <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Red Box Content</h2>
                 <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
