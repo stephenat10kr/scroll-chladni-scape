@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ChladniBackgroundExample from "./components/ChladniBackgroundExample";
-import ChladniScrollJackExample from "./exports/example";
+import ChladniScrollJackExample from "./chladni/examples/ChladniScrollJackExample";
 
 const queryClient = new QueryClient();
 
