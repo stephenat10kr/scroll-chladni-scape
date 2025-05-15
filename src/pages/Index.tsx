@@ -6,6 +6,17 @@ const Index = () => {
   return (
     <ChladniPattern>
       <div className="flex flex-col">
+        {/* Blue Box - Scrolls normally */}
+        <div className="bg-[#33C3F0] min-h-[200vh] flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Blue Box Content</h2>
+            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
+              This content scrolls normally before reaching the scroll-jacked sections. 
+              Continue scrolling to experience the scroll-jacking effect.
+            </p>
+          </div>
+        </div>
+
         {/* First ScrollJackContainer */}
         <ScrollJackContainer
           titles={["Section 1", "Section 2", "Section 3"]}

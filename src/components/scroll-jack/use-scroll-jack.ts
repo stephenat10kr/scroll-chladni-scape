@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { extractSectionTitles } from './utils';
 
-export const useScrollJack = (children: React.ReactNode) => {
+export const useScrollJack = (children: React.ReactNode, isIntersecting: boolean = true) => {
   // Create refs and state in consistent order (prevents React hook order errors)
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
@@ -10,6 +10,7 @@ export const useScrollJack = (children: React.ReactNode) => {
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [scrollHandlerEnabled, setScrollHandlerEnabled] = useState(false);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -35,6 +36,11 @@ export const useScrollJack = (children: React.ReactNode) => {
   }, []);
   
   useEffect(() => {
+    // Only enable wheel event handling when the container is intersecting with the viewport
+    if (!isIntersecting && !hasReachedEnd) {
+      return;
+    }
+
     // Track document scroll position to detect when to re-enter scroll-jack
     const handleWindowScroll = () => {
       if (hasReachedEnd) {
@@ -56,8 +62,8 @@ export const useScrollJack = (children: React.ReactNode) => {
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // Allow normal scrolling if we've reached the end
-      if (hasReachedEnd) {
+      // Only handle wheel events when scroll handling is enabled
+      if (!scrollHandlerEnabled || hasReachedEnd) {
         return; // Let the event propagate naturally
       }
       
@@ -88,6 +94,7 @@ export const useScrollJack = (children: React.ReactNode) => {
           } else {
             // We're at the last section, allow normal scrolling
             setHasReachedEnd(true);
+            setScrollHandlerEnabled(false);
             document.body.style.overflow = 'auto';
           }
         } else if (direction < 0) {
@@ -124,15 +131,15 @@ export const useScrollJack = (children: React.ReactNode) => {
       }
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, scrollHandlerEnabled, isIntersecting]);
 
   // Set initial body style
   useEffect(() => {
-    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
+    document.body.style.overflow = hasReachedEnd || !scrollHandlerEnabled ? 'auto' : 'hidden';
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [hasReachedEnd]);
+  }, [hasReachedEnd, scrollHandlerEnabled]);
 
   return {
     containerRef,
@@ -142,9 +149,11 @@ export const useScrollJack = (children: React.ReactNode) => {
     sectionCount,
     sectionTitles,
     hasReachedEnd,
+    scrollHandlerEnabled,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
     setHasReachedEnd,
+    setScrollHandlerEnabled
   };
 };
