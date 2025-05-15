@@ -8,7 +8,7 @@ const Index = () => {
       <div className="flex flex-col">
         {/* New Blue Section - 200vh height, scrolls normally */}
         <div className="bg-blue-600 min-h-[200vh] flex items-center justify-center">
-          <div className="text-center">
+          <div className="text-center fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
             <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Blue Section</h2>
             <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
               This section scrolls normally. Scroll down to reach the scroll-jacking area.
