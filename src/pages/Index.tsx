@@ -18,9 +18,10 @@ const Index = () => {
             </div>
           </div>
           
-          {/* ScrollJack container */}
+          {/* ScrollJack container - initially disabled until scrolled into view */}
           <ScrollJackContainer
             titles={["Section 1", "Section 2", "Section 3"]}
+            initialEnabled={false}
           >
             {/* Section 1 */}
             <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">

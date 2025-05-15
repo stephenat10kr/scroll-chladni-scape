@@ -1,12 +1,14 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useScrollJack } from './scroll-jack/use-scroll-jack';
 import { createModifiedSection } from './scroll-jack/utils';
 import ScrollJackTitle from './scroll-jack/ScrollJackTitle';
 import NavigationDots from './scroll-jack/NavigationDots';
 import { ScrollJackContainerProps } from './scroll-jack/types';
 
-const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, titles }) => {
+const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, titles, initialEnabled = false }) => {
+  const scrollJackRef = useRef<HTMLDivElement>(null);
+  
   const {
     containerRef,
     activeSection,
@@ -14,11 +16,47 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
     animationDirection,
     sectionCount,
     hasReachedEnd,
+    scrollJackEnabled,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
-    setHasReachedEnd
-  } = useScrollJack(children);
+    setHasReachedEnd,
+    setScrollJackEnabled
+  } = useScrollJack(children, initialEnabled);
+
+  // Use IntersectionObserver to detect when the scroll-jack container is in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Enable scroll jacking when scrolling down into the container
+          if (entry.isIntersecting && window.scrollY > window.innerHeight) {
+            setScrollJackEnabled(true);
+            console.log("Scroll-jacking enabled");
+          } 
+          // Disable scroll jacking when scrolling up into blue section
+          else if (!entry.isIntersecting && window.scrollY < window.innerHeight) {
+            setScrollJackEnabled(false);
+            console.log("Scroll-jacking disabled");
+          }
+        });
+      },
+      { 
+        threshold: 0.1,  // Trigger when 10% of the element is visible
+        rootMargin: "-20% 0px" // Trigger slightly before the element is visible
+      }
+    );
+
+    if (scrollJackRef.current) {
+      observer.observe(scrollJackRef.current);
+    }
+
+    return () => {
+      if (scrollJackRef.current) {
+        observer.unobserve(scrollJackRef.current);
+      }
+    };
+  }, [setScrollJackEnabled]);
 
   const handleSectionChange = (index: number) => {
     setPreviousSection(activeSection);
@@ -39,7 +77,13 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
   
   return (
     <div 
-      ref={containerRef} 
+      ref={(el) => {
+        // Combine the refs
+        if (el) {
+          containerRef.current = el;
+          scrollJackRef.current = el;
+        }
+      }}
       className={`h-screen overflow-hidden relative ${hasReachedEnd ? 'static' : ''}`}
     >
       {/* Fixed title display component */}
