@@ -2,20 +2,20 @@
 import React from 'react';
 
 export interface ScrollJackContainerProps {
-  children: React.ReactNode;
+  children: React.ReactNode; 
   titles?: string[];
-  triggerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export interface ScrollJackTitleProps {
-  titles: string[];
+export interface UseScrollJackResult {
+  containerRef: React.RefObject<HTMLDivElement>;
   activeSection: number;
   previousSection: number | null;
   animationDirection: 'up' | 'down';
-}
-
-export interface NavigationDotsProps {
   sectionCount: number;
-  activeSection: number;
-  onSectionChange: (index: number) => void;
+  sectionTitles: React.ReactNode[];
+  hasReachedEnd: boolean;
+  setActiveSection: React.Dispatch<React.SetStateAction<number>>;
+  setPreviousSection: React.Dispatch<React.SetStateAction<number | null>>;
+  setAnimationDirection: React.Dispatch<React.SetStateAction<'up' | 'down'>>;
+  setHasReachedEnd: React.Dispatch<React.SetStateAction<boolean>>;
 }

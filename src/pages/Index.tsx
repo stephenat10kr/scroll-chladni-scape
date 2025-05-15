@@ -1,64 +1,48 @@
 
-import React, { useRef } from "react";
 import ChladniPattern from "@/components/ChladniPattern";
 import ScrollJackContainer from "@/components/ScrollJackContainer";
 
 const Index = () => {
-  const scrollJackRef = useRef<HTMLDivElement>(null);
-
   return (
     <ChladniPattern>
       <div className="flex flex-col">
-        {/* Blue section that scrolls normally - 200vh height */}
-        <div className="bg-blue-500 min-h-[200vh] w-full flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-5xl md:text-7xl font-bold mb-6 text-white">Normal Scroll Section</h2>
-            <p className="text-xl md:text-2xl text-white max-w-2xl mx-auto">
-              This section scrolls normally. The scroll-jacking effect will start when you reach the next section.
-            </p>
-          </div>
-        </div>
-        
-        {/* Scroll Jack Container with ref */}
-        <div ref={scrollJackRef}>
-          <ScrollJackContainer
-            titles={["Section 1", "Section 2", "Section 3"]}
-            triggerRef={scrollJackRef}
-          >
-            {/* Section 1 */}
-            <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
-              <div className="text-center w-full mt-24">
-                <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
-                  <li>• Discover innovative scroll animations</li>
-                  <li>• Experience seamless section transitions</li>
-                  <li>• Explore interactive visual elements</li>
-                </ul>
-              </div>
-            </section>
+        {/* First ScrollJackContainer */}
+        <ScrollJackContainer
+          titles={["Section 1", "Section 2", "Section 3"]}
+        >
+          {/* Section 1 */}
+          <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
+            <div className="text-center w-full mt-24">
+              <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
+                <li>• Discover innovative scroll animations</li>
+                <li>• Experience seamless section transitions</li>
+                <li>• Explore interactive visual elements</li>
+              </ul>
+            </div>
+          </section>
 
-            {/* Section 2 */}
-            <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
-              <div className="text-center w-full mt-24">
-                <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
-                  <li>• Titles remain fixed while content scrolls</li>
-                  <li>• Animated transitions between sections</li>
-                  <li>• Customizable scroll behavior</li>
-                </ul>
-              </div>
-            </section>
+          {/* Section 2 */}
+          <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
+            <div className="text-center w-full mt-24">
+              <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
+                <li>• Titles remain fixed while content scrolls</li>
+                <li>• Animated transitions between sections</li>
+                <li>• Customizable scroll behavior</li>
+              </ul>
+            </div>
+          </section>
 
-            {/* Section 3 */}
-            <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
-              <div className="text-center w-full mt-24">
-                <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
-                  <li>• Interactive navigation dots</li>
-                  <li>• Responsive design for all devices</li>
-                  <li>• Smooth animation performance</li>
-                </ul>
-              </div>
-            </section>
-          </ScrollJackContainer>
-        </div>
+          {/* Section 3 */}
+          <section className="container mx-auto px-4 min-h-screen flex flex-col items-center justify-center">
+            <div className="text-center w-full mt-24">
+              <ul className="text-xl md:text-2xl max-w-2xl mx-auto text-white space-y-2">
+                <li>• Interactive navigation dots</li>
+                <li>• Responsive design for all devices</li>
+                <li>• Smooth animation performance</li>
+              </ul>
+            </div>
+          </section>
+        </ScrollJackContainer>
         
         {/* Red box content that becomes visible after scroll-jacking */}
         <div className="bg-[#ea384c] min-h-screen flex items-center justify-center">
