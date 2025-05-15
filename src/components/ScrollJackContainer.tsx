@@ -26,34 +26,51 @@ const ScrollJackContainer: React.FC<ScrollJackContainerProps> = ({ children, tit
 
   // Use IntersectionObserver to detect when the scroll-jack container is in view
   useEffect(() => {
+    // Create a separate element for observation to improve reliability
+    const observerTarget = document.createElement('div');
+    observerTarget.style.position = 'absolute';
+    observerTarget.style.top = '0';
+    observerTarget.style.height = '1px'; // Minimal size
+    observerTarget.style.width = '100%';
+    observerTarget.style.pointerEvents = 'none';
+    
+    // Add the target to the DOM
+    if (scrollJackRef.current) {
+      scrollJackRef.current.appendChild(observerTarget);
+    }
+    
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          // Enable scroll jacking when scrolling down into the container
-          if (entry.isIntersecting && window.scrollY > window.innerHeight) {
-            setScrollJackEnabled(true);
+        // We only care about the first entry since we're observing a single element
+        const entry = entries[0];
+        
+        if (entry) {
+          // Enable scroll jacking when the container enters the viewport
+          // and we're scrolling down from the blue section
+          if (entry.isIntersecting && window.scrollY > 0) {
             console.log("Scroll-jacking enabled");
+            setScrollJackEnabled(true);
           } 
-          // Disable scroll jacking when scrolling up into blue section
-          else if (!entry.isIntersecting && window.scrollY < window.innerHeight) {
-            setScrollJackEnabled(false);
+          // Disable scroll jacking when scrolling back up to the blue section
+          else if (!entry.isIntersecting && window.scrollY < entry.boundingClientRect.top) {
             console.log("Scroll-jacking disabled");
+            setScrollJackEnabled(false);
           }
-        });
+        }
       },
       { 
-        threshold: 0.1,  // Trigger when 10% of the element is visible
-        rootMargin: "-20% 0px" // Trigger slightly before the element is visible
+        threshold: 0.05,  // Trigger when just a small part of the element is visible
+        rootMargin: "-100px 0px" // Adjust this to trigger at the right moment
       }
     );
 
-    if (scrollJackRef.current) {
-      observer.observe(scrollJackRef.current);
-    }
+    // Observe the target element
+    observer.observe(observerTarget);
 
     return () => {
-      if (scrollJackRef.current) {
-        observer.unobserve(scrollJackRef.current);
+      observer.disconnect();
+      if (scrollJackRef.current && scrollJackRef.current.contains(observerTarget)) {
+        scrollJackRef.current.removeChild(observerTarget);
       }
     };
   }, [setScrollJackEnabled]);
