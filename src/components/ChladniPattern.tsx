@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 
 interface ChladniPatternProps {
@@ -241,11 +242,11 @@ const ChladniPattern: React.FC<ChladniPatternProps> = ({ children }) => {
           left: 0,
           width: '100%',
           height: '100%',
-          zIndex: 0,
+          zIndex: -10, // Set canvas to be behind all content
           pointerEvents: 'none'
         }}
       />
-      <div className="relative z-10">
+      <div className="relative z-10"> {/* Ensure content is above the canvas */}
         {children}
       </div>
     </div>
