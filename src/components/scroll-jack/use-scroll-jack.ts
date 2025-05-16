@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { extractSectionTitles } from './utils';
 
-export const useScrollJack = (children: React.ReactNode, initialEnabled: boolean = true) => {
+export const useScrollJack = (children: React.ReactNode) => {
   // Create refs and state in consistent order (prevents React hook order errors)
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState(0);
@@ -10,7 +10,6 @@ export const useScrollJack = (children: React.ReactNode, initialEnabled: boolean
   const [animationDirection, setAnimationDirection] = useState<'up' | 'down'>('up');
   const [isScrolling, setIsScrolling] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
-  const [scrollJackEnabled, setScrollJackEnabled] = useState(initialEnabled);
   
   // Add scroll sensitivity threshold
   const scrollThreshold = useRef(50); // Higher value = less sensitive
@@ -36,12 +35,6 @@ export const useScrollJack = (children: React.ReactNode, initialEnabled: boolean
   }, []);
   
   useEffect(() => {
-    // If scroll-jacking is disabled, allow normal scrolling
-    if (!scrollJackEnabled) {
-      document.body.style.overflow = 'auto';
-      return;
-    }
-
     // Track document scroll position to detect when to re-enter scroll-jack
     const handleWindowScroll = () => {
       if (hasReachedEnd) {
@@ -63,11 +56,6 @@ export const useScrollJack = (children: React.ReactNode, initialEnabled: boolean
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // If scroll-jacking is disabled, allow normal scrolling
-      if (!scrollJackEnabled) {
-        return;
-      }
-
       // Allow normal scrolling if we've reached the end
       if (hasReachedEnd) {
         return; // Let the event propagate naturally
@@ -136,20 +124,15 @@ export const useScrollJack = (children: React.ReactNode, initialEnabled: boolean
       }
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [activeSection, isScrolling, sectionCount, hasReachedEnd, scrollJackEnabled]);
+  }, [activeSection, isScrolling, sectionCount, hasReachedEnd]);
 
-  // Set initial body style based on scrollJackEnabled and hasReachedEnd
+  // Set initial body style
   useEffect(() => {
-    if (!scrollJackEnabled || hasReachedEnd) {
-      document.body.style.overflow = 'auto';
-    } else {
-      document.body.style.overflow = 'hidden';
-    }
-
+    document.body.style.overflow = hasReachedEnd ? 'auto' : 'hidden';
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [hasReachedEnd, scrollJackEnabled]);
+  }, [hasReachedEnd]);
 
   return {
     containerRef,
@@ -159,11 +142,9 @@ export const useScrollJack = (children: React.ReactNode, initialEnabled: boolean
     sectionCount,
     sectionTitles,
     hasReachedEnd,
-    scrollJackEnabled,
     setActiveSection,
     setPreviousSection,
     setAnimationDirection,
     setHasReachedEnd,
-    setScrollJackEnabled
   };
 };

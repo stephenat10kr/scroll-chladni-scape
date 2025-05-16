@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { ChladniPattern } from '../chladni';
+import ExportableChladniPattern from './ExportableChladniPattern';
 
 const ChladniBackgroundExample: React.FC = () => {
   return (
-    <ChladniPattern>
+    <ExportableChladniPattern>
       {/* Your page content goes here */}
       <div className="container mx-auto py-20 px-4 min-h-screen">
         <div className="text-center mb-20">
@@ -22,7 +22,7 @@ const ChladniBackgroundExample: React.FC = () => {
           </div>
         </div>
       </div>
-    </ChladniPattern>
+    </ExportableChladniPattern>
   );
 };
 
